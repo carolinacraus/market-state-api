@@ -1,17 +1,20 @@
-# scripts/calculators.py
-
 import pandas as pd
 import numpy as np
 import os
+from logger import get_logger
+
+# Initialize logger
+logger = get_logger("indicators")
 
 def load_data(file_path):
     try:
         df = pd.read_csv(file_path, parse_dates=['Date'])
         df.sort_values('Date', inplace=True)
         df.reset_index(drop=True, inplace=True)
+        logger.info(f"Loaded data from {file_path} with {len(df)} rows.")
         return df
     except Exception as e:
-        print(f"❌ Failed to load CSV: {e}")
+        logger.error(f"Failed to load CSV: {e}")
         return pd.DataFrame()
 
 def calculate_5d_pct(df):
@@ -84,7 +87,7 @@ def calculate_intermarket_scores(df):
 def calculate_bbw(df, window=20):
     target = 'Close_SP500'
     if target not in df.columns:
-        print(f"⚠️ {target} not found. Skipping BBW.")
+        logger.warning(f"{target} not found. Skipping BBW.")
         return df
 
     rolling_mean = df[target].rolling(window)
@@ -100,15 +103,16 @@ def calculate_rsp_spy_ratio(df):
     if 'Close_RSP' in df.columns and 'Close_SPY' in df.columns:
         df['RSP/SPY_Ratio'] = df['Close_RSP'] / df['Close_SPY']
     else:
-        print("⚠️ Missing Close_RSP or Close_SPY columns.")
+        logger.warning("Missing Close_RSP or Close_SPY columns. Skipping RSP/SPY ratio.")
     return df
 
 def calculate_all_indicators(input_path, output_path):
     df = load_data(input_path)
     if df.empty:
-        print("⚠️ No data to process.")
+        logger.warning("No data to process. Aborting.")
         return
 
+    logger.info("Calculating indicators...")
     df = calculate_5d_pct(df)
     df = calculate_roc(df)
     df = calculate_rsi(df)
@@ -118,8 +122,11 @@ def calculate_all_indicators(input_path, output_path):
     df = calculate_bbw(df)
     df = calculate_rsp_spy_ratio(df)
 
-    df.to_csv(output_path, index=False)
-    print(f"✅ Indicators saved to: {output_path}")
+    try:
+        df.to_csv(output_path, index=False)
+        logger.info(f"Indicators saved to: {output_path}")
+    except Exception as e:
+        logger.error(f"Failed to save output CSV: {e}")
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

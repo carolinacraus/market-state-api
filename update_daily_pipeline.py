@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from scripts.DataRetrieval_FMP import fetch_all_tickers, get_valid_trading_days, TICKER_MAP
 from scripts.MarketBreadth_SQL import fetch_breadth_data
-from scripts.merge_market_breadth import reformat_market_breadth
+from scripts.MergeBreadth_SQL import reformat_market_breadth
 from scripts.calculate_indicators import calculate_all_indicators
 from scripts.classify_markets import classify_market_state
 from scripts.logger import get_logger
