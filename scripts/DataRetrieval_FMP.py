@@ -1,14 +1,22 @@
-# scripts/DataRetrieval_FMP.py
-
 import requests
 import pandas as pd
 import os
 import pandas_market_calendars as mcal
 from datetime import datetime
 import argparse
+from dotenv import load_dotenv
+from logger import get_logger
 
+# Load environment variables
+load_dotenv()
+
+# Initialize logger
+logger = get_logger("fmp_data")
+
+# Get API key
 API_KEY = os.getenv("FMP_API_KEY")
 
+# Ticker mappings
 TICKER_MAP = {
     "^GSPC": "SP500",
     "^TNX": "Yield",
@@ -26,21 +34,23 @@ def get_valid_trading_days(start_date, end_date):
     return pd.to_datetime(schedule.index)
 
 def fetch_ticker_data(ticker, start_date, end_date):
-    print(f"Fetching: {ticker}")
+    logger.info(f"Fetching data for: {ticker}")
     symbol = ticker.replace("^", "%5E").replace("=", "%3D")
     url = (
         f"https://financialmodelingprep.com/api/v3/historical-price-full/{symbol}"
         f"?from={start_date}&to={end_date}&apikey={API_KEY}"
     )
 
-    response = requests.get(url)
-    if response.status_code != 200:
-        print(f"❌ Failed to fetch {ticker}: {response.text}")
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except Exception as e:
+        logger.error(f"Request failed for {ticker}: {e}")
         return None
 
     data = response.json()
     if "historical" not in data:
-        print(f"⚠️ No historical data found for {ticker}")
+        logger.warning(f"No historical data found for {ticker}")
         return None
 
     df = pd.DataFrame(data["historical"])
@@ -59,7 +69,10 @@ def fetch_all_tickers(tickers, start_date, end_date):
     for ticker in tickers:
         df = fetch_ticker_data(ticker, start_date, end_date)
         if df is not None:
-            all_data = df if all_data is None else pd.merge(all_data, df, on="Date", how="outer")
+            if all_data is None:
+                all_data = df
+            else:
+                all_data = pd.merge(all_data, df, on="Date", how="outer")
     return all_data
 
 def save_market_data(start_date, end_date):
@@ -75,9 +88,9 @@ def save_market_data(start_date, end_date):
         df = df[df["Date"].isin(valid_days)]
         df.sort_values("Date", inplace=True)
         df.to_csv(filepath, index=False)
-        print(f"✅ Saved MarketStates_Data.csv to {filepath}")
+        logger.info(f"✅ Saved MarketStates_Data.csv to {filepath}")
     else:
-        print("⚠️ No data retrieved from FMP API.")
+        logger.warning("⚠️ No data retrieved from FMP API.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build initial historical market dataset")
