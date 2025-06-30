@@ -15,7 +15,7 @@ def index():
 @app.route("/fetch-market-data", methods=["POST"])
 def fetch_market_data():
     try:
-        start_date = request.json.get("start_date", "2008-11-03")
+        start_date = request.json.get("start_date", "2005-01-01")
         end_date = request.json.get("end_date", "2025-06-03")
         subprocess.run([sys.executable, "scripts/DataRetrieval_FMP.py", "--start", start_date, "--end", end_date], check=True)
         logger.info(f"Fetched market data from {start_date} to {end_date}")

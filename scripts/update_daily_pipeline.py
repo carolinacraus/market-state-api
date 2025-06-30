@@ -5,11 +5,11 @@ import pandas as pd
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
-from scripts.DataRetrieval_FMP import fetch_all_tickers, get_valid_trading_days, TICKER_MAP
-from scripts.MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data, merge_with_market_data
-from scripts.calculate_indicators import calculate_all_indicators
-from scripts.classify_markets import classify_market_state
-from scripts.logger import get_logger
+from DataRetrieval_FMP import fetch_all_tickers, get_valid_trading_days, TICKER_MAP
+from MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data, merge_with_market_data
+from calculate_indicators import calculate_all_indicators
+from classify_markets import classify_market_state
+from logger import get_logger
 
 def update_pipeline(start_date=None, end_date=None):
     logger = get_logger("daily_update")

@@ -4,3 +4,4 @@ numpy
 requests
 pyodbc
 pandas_market_calendars
+dotenv
