@@ -49,8 +49,110 @@ def classify_market_state(row):
     nymo = row.get("Close_NYMO", np.nan)
     rsp_spy = row.get("RSP/SPY_Ratio", 1)
 
-    # (Scoring logic remains unchanged)
-    # ...
+    # Bullish Momentum
+    if sp500 > 3: scores["Bullish Momentum"] += 4
+    if -0.2 <= yield_ <= -0.1: scores["Bullish Momentum"] += 2
+    if dxy <= -1: scores["Bullish Momentum"] += 2
+    if oil >= 3 and copper >= 3: scores["Bullish Momentum"] += 2
+    if gold < 20: scores["Bullish Momentum"] += 2
+    if 15 <= vix <= 25: scores["Bullish Momentum"] += 2
+    if rsp_spy > 2: scores["Bullish Momentum"] += 2
+    if 0.003 <= ma <= 0.01: scores["Bullish Momentum"] += 2
+    if 60 <= rsi <= 75: scores["Bullish Momentum"] += 2
+    if 1 <= atr <= 2: scores["Bullish Momentum"] += 2
+    if 2 <= bbw <= 3: scores["Bullish Momentum"] += 2
+    if ad >= 2: scores["Bullish Momentum"] += 2
+    if 60 <= nymo <= 100: scores["Bullish Momentum"] += 2
+
+    # Steady Climb
+    if 0.5 <= sp500 <= 3: scores["Steady Climb"] += 4
+    if -0.2 <= yield_ <= 0.2: scores["Steady Climb"] += 2
+    if -1 <= dxy <= 1: scores["Steady Climb"] += 2
+    if -3 <= oil <= 3 and 1 <= copper <= 3: scores["Steady Climb"] += 2
+    if -30 <= gold <= 30: scores["Steady Climb"] += 2
+    if 12 <= vix <= 20: scores["Steady Climb"] += 2
+    if 1.5 <= rsp_spy <= 2.5: scores["Steady Climb"] += 2
+    if 0.003 <= ma <= 0.01: scores["Steady Climb"] += 2
+    if 50 <= rsi <= 65: scores["Steady Climb"] += 2
+    if 0.5 <= atr <= 1.5: scores["Steady Climb"] += 2
+    if 1.5 <= bbw <= 2.5: scores["Steady Climb"] += 2
+    if 1.5 <= ad <= 2.0: scores["Steady Climb"] += 2
+    if 30 <= nymo <= 60: scores["Steady Climb"] += 2
+
+    # Trend Pullback
+    if -5 <= sp500 <= -1: scores["Trend Pullback"] += 4
+    if 4 <= yield_ <= 4.5: scores["Trend Pullback"] += 2
+    if -1 <= dxy <= 1: scores["Trend Pullback"] += 2
+    if -5 <= oil <= -2 and -5 <= copper <= -2: scores["Trend Pullback"] += 2
+    if 20 <= gold <= 40: scores["Trend Pullback"] += 2
+    if 18 <= vix <= 25: scores["Trend Pullback"] += 2
+    if rsp_spy < 2: scores["Trend Pullback"] += 2
+    if ma < 0.002: scores["Trend Pullback"] += 2
+    if 40 <= rsi <= 60: scores["Trend Pullback"] += 2
+    if 1.5 <= atr <= 2.5: scores["Trend Pullback"] += 2
+    if 2 <= bbw <= 3: scores["Trend Pullback"] += 2
+    if 1 <= ad <= 1.5: scores["Trend Pullback"] += 2
+    if -40 <= nymo <= 20: scores["Trend Pullback"] += 2
+
+    # Bearish Collapse
+    if sp500 <= -3: scores["Bearish Collapse"] += 4
+    if abs(yield_) >= 0.3 or row['Close_Yield'] >= 4.5 or row['Close_Yield'] <= 3: scores["Bearish Collapse"] += 2
+    if dxy >= 1: scores["Bearish Collapse"] += 2
+    if oil <= -5 and copper <= -5: scores["Bearish Collapse"] += 2
+    if gold >= 50: scores["Bearish Collapse"] += 2
+    if vix > 30: scores["Bearish Collapse"] += 2
+    if rsp_spy < 0.5: scores["Bearish Collapse"] += 2
+    if ma < -0.01: scores["Bearish Collapse"] += 2
+    if rsi < 40: scores["Bearish Collapse"] += 2
+    if atr > 3: scores["Bearish Collapse"] += 2
+    if bbw > 4: scores["Bearish Collapse"] += 2
+    if ad < 0.8: scores["Bearish Collapse"] += 2
+    if nymo < -100: scores["Bearish Collapse"] += 2
+
+    # Stagnant Drift
+    if -1 <= sp500 <= 1: scores["Stagnant Drift"] += 4
+    if abs(yield_) < 0.1: scores["Stagnant Drift"] += 2
+    if abs(dxy) <= 0.5: scores["Stagnant Drift"] += 2
+    if abs(oil) <= 2 and abs(copper) <= 2: scores["Stagnant Drift"] += 2
+    if abs(gold) <= 20: scores["Stagnant Drift"] += 2
+    if 15 <= vix <= 20: scores["Stagnant Drift"] += 2
+    if rsp_spy < 1.5: scores["Stagnant Drift"] += 2
+    if abs(ma) < 0.005: scores["Stagnant Drift"] += 2
+    if 45 <= rsi <= 55: scores["Stagnant Drift"] += 2
+    if atr < 1: scores["Stagnant Drift"] += 2
+    if bbw < 1.5: scores["Stagnant Drift"] += 2
+    if 1.0 <= ad <= 1.2: scores["Stagnant Drift"] += 2
+    if -10 <= nymo <= 10: scores["Stagnant Drift"] += 2
+
+    # Volatile Chop
+    if -2 <= sp500 <= 2: scores["Volatile Chop"] += 4
+    if 0.1 <= abs(yield_) <= 0.3: scores["Volatile Chop"] += 2
+    if -1 <= dxy <= 1: scores["Volatile Chop"] += 2
+    if -5 <= oil <= 5 and -5 <= copper <= 5: scores["Volatile Chop"] += 2
+    if -50 <= gold <= 50: scores["Volatile Chop"] += 2
+    if 20 <= vix <= 30: scores["Volatile Chop"] += 2
+    if rsp_spy < 2: scores["Volatile Chop"] += 2
+    if abs(ma) <= 0.005: scores["Volatile Chop"] += 2
+    if 40 <= rsi <= 60: scores["Volatile Chop"] += 2
+    if 2 <= atr <= 3: scores["Volatile Chop"] += 2
+    if 3 <= bbw <= 4: scores["Volatile Chop"] += 2
+    if 0.8 <= ad <= 1.3: scores["Volatile Chop"] += 2
+    if -20 <= nymo <= 20: scores["Volatile Chop"] += 2
+
+    # Volatile Drop
+    if -4 <= sp500 <= -2: scores["Volatile Drop"] += 4
+    if -0.2 <= yield_ <= 0.2: scores["Volatile Drop"] += 2
+    if -1 <= dxy <= 1: scores["Volatile Drop"] += 2
+    if -5 <= oil <= -2 and -5 <= copper <= -2: scores["Volatile Drop"] += 2
+    if 10 <= gold <= 40: scores["Volatile Drop"] += 2
+    if 20 <= vix <= 28: scores["Volatile Drop"] += 2
+    if rsp_spy < 0.5: scores["Volatile Drop"] += 2
+    if -0.01 <= ma <= -0.005: scores["Volatile Drop"] += 2
+    if 35 <= rsi <= 50: scores["Volatile Drop"] += 2
+    if 2 <= atr <= 3: scores["Volatile Drop"] += 2
+    if 3 <= bbw <= 4: scores["Volatile Drop"] += 2
+    if ad < 1.0: scores["Volatile Drop"] += 2
+    if -100 <= nymo <= -40: scores["Volatile Drop"] += 2
 
     # Evaluate scores
     top_state = max(scores, key=scores.get)
@@ -70,19 +172,35 @@ def classify_market_state(row):
     )
     return pd.Series([top_state, score, diag])
 
-# Apply and export
 try:
     logger.info("Applying market state classification...")
     df[['MarketState', 'Score', 'Diagnostics']] = df.apply(classify_market_state, axis=1)
-    df.to_csv(output_csv, index=False)
-    logger.info(f"Saved classified dataset to {output_csv}")
 
-    with open(states_txt, 'w') as f1, open(diag_txt, 'w') as f2:
+    if os.path.exists(output_csv):
+        df_old = pd.read_csv(output_csv, parse_dates=["Date"])
+        df = pd.concat([df_old, df], ignore_index=True).drop_duplicates(subset=["Date"]).sort_values("Date")
+    df.to_csv(output_csv, index=False)
+    logger.info(f"Appended to classified dataset at {output_csv}")
+
+    existing_dates = set()
+    if os.path.exists(states_txt):
+        with open(states_txt, 'r') as f:
+            existing_dates = {line.split(",")[0].strip() for line in f.readlines()}
+
+    with open(states_txt, 'a') as f1, open(diag_txt, 'a') as f2:
+        new_count = 0
         for _, row in df.iterrows():
             date_str = pd.to_datetime(row['Date']).strftime('%Y-%m-%d')
+            if date_str in existing_dates:
+                continue
             f1.write(f"{date_str}, {row['MarketState']}\n")
             f2.write(f"{date_str}, {row['MarketState']}, {row['Diagnostics']}\n")
-    logger.info(f"Saved states to {states_txt} and diagnostics to {diag_txt}")
+            new_count += 1
+        logger.info(f"Appended {new_count} new rows to {states_txt} and {diag_txt}")
+
+    logger.info("✅ Market state classification completed successfully.")
+
 except Exception as e:
     logger.error(f"Error during classification or file writing: {e}")
-    raise
+    raise SystemExit(1)
+
