@@ -72,5 +72,19 @@ def run_daily_pipeline():
         logger.error(f"Error running daily pipeline: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/download/<filename>", methods=["GET"])
+def download_file(filename):
+    try:
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
+        file_path = os.path.join(base_dir, filename)
+
+        if not os.path.exists(file_path):
+            logger.error(f"File not found: {file_path}")
+            return jsonify({"error": f"{filename} does not exist"}), 404
+
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        logger.error(f"Error sending file: {e}")
+        return jsonify({"error": str(e)}), 500
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
