@@ -5,6 +5,5 @@ requests
 pyodbc
 pandas_market_calendars
 dotenv
-googleapiclient
 google
 datetime
