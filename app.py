@@ -3,6 +3,7 @@ import subprocess
 import os
 import sys
 from scripts.logger import get_logger
+from datetime import datetime
 
 app = Flask(__name__)
 logger = get_logger("flask_app")
@@ -16,7 +17,7 @@ def index():
 def fetch_market_data():
     try:
         start_date = request.json.get("start_date", "2005-01-01")
-        end_date = request.json.get("end_date", "2025-06-03")
+        end_date = request.json.get("end_date") or datetime.today().strftime("%Y-%m-%d")
         subprocess.run([sys.executable, "scripts/DataRetrieval_FMP.py", "--start", start_date, "--end", end_date], check=True)
         logger.info(f"Fetched market data from {start_date} to {end_date}")
         return jsonify({"status": f"Market data fetched from {start_date} to {end_date}"}), 200
@@ -58,32 +59,17 @@ def run_classification():
 def run_daily_pipeline():
     try:
         start_date = request.json.get("start_date", None)
-        end_date = request.json.get("end_date", None)
+        end_date = request.json.get("end_date") or datetime.today().strftime("%Y-%m-%d")
         cmd = [sys.executable, "scripts/update_daily_pipeline.py"]
         if start_date:
             cmd.append(start_date)
         if end_date:
             cmd.append(end_date)
         subprocess.run(cmd, check=True)
-        logger.info(f"Daily pipeline run from {start_date or 'last update'} to {end_date or 'today'}")
-        return jsonify({"status": f"Full daily pipeline executed from {start_date or 'last update'} to {end_date or 'today'}"}), 200
+        logger.info(f"Daily pipeline run from {start_date or 'last update'} to {end_date}")
+        return jsonify({"status": f"Full daily pipeline executed from {start_date or 'last update'} to {end_date}"}), 200
     except subprocess.CalledProcessError as e:
         logger.error(f"Error running daily pipeline: {e}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/download/<filename>", methods=["GET"])
-def download_file(filename):
-    try:
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
-        file_path = os.path.join(base_dir, filename)
-
-        if not os.path.exists(file_path):
-            logger.error(f"File not found: {file_path}")
-            return jsonify({"error": f"{filename} does not exist"}), 404
-
-        return send_file(file_path, as_attachment=True)
-    except Exception as e:
-        logger.error(f"Error sending file: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
