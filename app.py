@@ -11,7 +11,7 @@ logger = get_logger("flask_app")
 @app.route("/")
 def index():
     logger.info("Health check hit.")
-    return "✅ Market State AI Microservice is running!"
+    return "Market State AI Microservice is running!"
 
 @app.route("/fetch-market-data", methods=["POST"])
 def fetch_market_data():
@@ -86,5 +86,41 @@ def download_file(filename):
     except Exception as e:
         logger.error(f"Error sending file: {e}")
         return jsonify({"error": str(e)}), 500
+# === Dedicated Download Routes ===
+
+@app.route("/download/market-data", methods=["GET"])
+def download_market_data():
+    return _send_data_file("MarketStates_Data.csv")
+
+@app.route("/download/indicators", methods=["GET"])
+def download_indicators():
+    return _send_data_file("MarketData_with_Indicators.csv")
+
+@app.route("/download/states", methods=["GET"])
+def download_states():
+    return _send_data_file("MarketData_with_States.csv")
+
+@app.route("/download/diagnostics", methods=["GET"])
+def download_diagnostics():
+    return _send_data_file("MarketStates_Diagnostics.txt")
+
+@app.route("/download/states-txt", methods=["GET"])
+def download_states_txt():
+    return _send_data_file("MarketStates.txt")
+
+def _send_data_file(filename):
+    try:
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
+        file_path = os.path.join(base_dir, filename)
+
+        if not os.path.exists(file_path):
+            logger.error(f"File not found: {file_path}")
+            return jsonify({"error": f"{filename} does not exist"}), 404
+
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        logger.error(f"Error sending file {filename}: {e}")
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
