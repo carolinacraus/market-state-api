@@ -5151,3 +5151,8 @@
 2025-06-24, Bullish Momentum, S&P 5-day N/A, RSP Divergence +0.00%, VIX N/A, RSI ~N/A, Net Advances 2485, McClellan 68, Score: 0/39
 2025-06-25, Bullish Momentum, S&P 5-day N/A, RSP Divergence +0.00%, VIX N/A, RSI ~N/A, Net Advances 2478, McClellan -8, Score: 0/39
 2025-06-26, Bullish Momentum, S&P 5-day N/A, RSP Divergence +0.00%, VIX N/A, RSI ~N/A, Net Advances 2502, McClellan 81, Score: 0/39
+2025-06-27, Volatile Chop, 5d%: +nan%, MA20: +nan, RSI: nan, VIX: 16.32, ATR: nan, BBW: nan, Score: [0, -2, -2], Dist: 2.00
+2025-06-30, Volatile Chop, 5d%: +nan%, MA20: +nan, RSI: nan, VIX: 16.73, ATR: nan, BBW: nan, Score: [0, -2, -2], Dist: 2.00
+2025-07-01, Volatile Chop, 5d%: +nan%, MA20: +nan, RSI: nan, VIX: 16.83, ATR: nan, BBW: nan, Score: [0, -2, -2], Dist: 2.00
+2025-07-02, Volatile Chop, 5d%: +nan%, MA20: +nan, RSI: nan, VIX: 16.64, ATR: nan, BBW: nan, Score: [0, -2, -2], Dist: 2.00
+2025-07-03, Volatile Chop, 5d%: +nan%, MA20: +nan, RSI: nan, VIX: 16.38, ATR: nan, BBW: nan, Score: [0, -2, -2], Dist: 2.00

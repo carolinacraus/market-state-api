@@ -5151,3 +5151,8 @@
 2025-06-24, Bullish Momentum
 2025-06-25, Bullish Momentum
 2025-06-26, Bullish Momentum
+2025-06-27, Volatile Chop
+2025-06-30, Volatile Chop
+2025-07-01, Volatile Chop
+2025-07-02, Volatile Chop
+2025-07-03, Volatile Chop
