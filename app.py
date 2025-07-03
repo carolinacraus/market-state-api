@@ -60,17 +60,26 @@ def run_daily_pipeline():
     try:
         start_date = request.json.get("start_date", None)
         end_date = request.json.get("end_date") or datetime.today().strftime("%Y-%m-%d")
+
         cmd = [sys.executable, "scripts/update_daily_pipeline.py"]
         if start_date:
             cmd.append(start_date)
         if end_date:
             cmd.append(end_date)
+
+        logger.info(f"Running pipeline command: {cmd}")
         subprocess.run(cmd, check=True)
-        logger.info(f"Daily pipeline run from {start_date or 'last update'} to {end_date}")
-        return jsonify({"status": f"Full daily pipeline executed from {start_date or 'last update'} to {end_date}"}), 200
+        return jsonify({"status": f"Pipeline executed from {start_date or 'last'} to {end_date}"}), 200
+
     except subprocess.CalledProcessError as e:
-        logger.error(f"Error running daily pipeline: {e}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Subprocess failed with return code {e.returncode}", exc_info=True)
+        logger.error(f"Command output: {e.output if hasattr(e, 'output') else 'No output captured'}")
+        return jsonify({"error": f"Pipeline failed: {str(e)}"}), 500
+
+    except Exception as e:
+        logger.error(f"Unexpected error in /run-daily-pipeline: {e}", exc_info=True)
+        return jsonify({"error": f"Unhandled error: {str(e)}"}), 500
+
 
 @app.route("/download/<filename>", methods=["GET"])
 def download_file(filename):
