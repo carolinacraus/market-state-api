@@ -17,7 +17,7 @@ load_dotenv()
 
 def update_pipeline(start_date=None, end_date=None):
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_dir = os.path.join(base_dir, "data")
 
     market_path = os.path.join(data_dir, "MarketStates_Data.csv")
@@ -25,6 +25,10 @@ def update_pipeline(start_date=None, end_date=None):
     state_output_path = os.path.join(data_dir, "MarketData_with_States.csv")
     states_txt = os.path.join(data_dir, "MarketStates.txt")
     diag_txt = os.path.join(data_dir, "MarketStates_Diagnostics.txt")
+
+    print("BASE DIR:", base_dir)
+    print("MARKET PATH:", market_path)
+    print("Exists:", os.path.exists(market_path))
 
     logger.info(f"Starting pipeline with start_date={start_date}, end_date={end_date}")
 
