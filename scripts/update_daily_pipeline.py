@@ -126,7 +126,7 @@ def update_pipeline(start_date=None, end_date=None):
         logger.error(f"[Step 4 - Classification] failed: {e}", exc_info=True)
         sys.exit(1)
 
-    logger.info("✅ Full pipeline completed successfully")
+    logger.info(" Full pipeline completed successfully")
     sys.exit(0)
 
 if __name__ == "__main__":
