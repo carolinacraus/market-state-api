@@ -1,8 +1,8 @@
 import os
 import pandas as pd
 import numpy as np
-from datetime import datetime
 import logging
+import sys
 
 # ========== Logger Setup ==========
 def get_logger(name="market_state_classifier"):
@@ -23,26 +23,17 @@ def get_logger(name="market_state_classifier"):
 
 logger = get_logger()
 
-# ========== File Paths ==========
-base_dir = os.path.dirname(os.path.abspath(__file__))
-data_path = os.path.join(base_dir, "data", "MarketData_with_Indicators.csv")
-output_csv = os.path.join(base_dir, "data", "MarketData_with_States.csv")
-states_txt = os.path.join(base_dir, "data", "MarketStates.txt")
-diag_txt = os.path.join(base_dir, "data", "MarketStates_Diagnostics.txt")
-
-# ========== Load and Prepare Data ==========
-try:
-    df = pd.read_csv(data_path)
-    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-    logger.info(f"Loaded dataset from {data_path} with {len(df)} rows.")
-except Exception as e:
-    logger.error(f"Failed to load dataset: {e}")
-    raise
-
+# ========== Market State Profiles ==========
+state_profiles = {
+    "Steady Climb": [2, 1, 2],
+    "Trend Pullback": [-1, 1, 0],
+    "Orderly Decline": [-2, -1, 1],
+    "Sharp Decline": [-3, -2, -2],
+    "Volatile Chop": [0, 0, -2],
+}
 
 # ========== Scoring Logic ==========
 def compute_scores(row):
-    # Trend
     trend_score = 0
     sp500 = row.get("5d_pct_SP500", np.nan)
     ma20 = row.get("20d_slope_SP500", np.nan)
@@ -59,14 +50,12 @@ def compute_scores(row):
     elif -0.5 <= ma20 < -0.2: trend_score += -1
     elif ma20 < -0.5: trend_score += -2
 
-    # Momentum
     rsi = row.get("RSI_14_SP500", np.nan)
     if rsi > 65: momentum_score = 2
     elif 50 <= rsi <= 65: momentum_score = 1
     elif 40 <= rsi < 50: momentum_score = 0
     else: momentum_score = -2
 
-    # Volatility
     vix = row.get("Close_VIX", np.nan)
     atr = row.get("Normalized_ATR", np.nan)
     bbw = row.get("BBW", np.nan)
@@ -79,62 +68,64 @@ def compute_scores(row):
 
     return pd.Series([trend_score, momentum_score, volatility_score])
 
-# ========== Market State Profiles ==========
-state_profiles = {
-    "Steady Climb": [2, 1, 2],
-    "Trend Pullback": [-1, 1, 0],
-    "Orderly Decline": [-2, -1, 1],
-    "Sharp Decline": [-3, -2, -2],
-    "Volatile Chop": [0, 0, -2],
-}
+# ========== Classification Function ==========
+def classify_market_states(df: pd.DataFrame) -> pd.DataFrame:
+    logger.info("Scoring and classifying market states...")
+    df = df.copy()
+    df[['TrendScore', 'MomentumScore', 'VolatilityScore']] = df.apply(compute_scores, axis=1)
 
-# ========== Classification Logic ==========
-def classify_state(row):
-    vector = np.array([row['TrendScore'], row['MomentumScore'], row['VolatilityScore']])
-    distances = {state: np.linalg.norm(vector - np.array(profile)) for state, profile in state_profiles.items()}
-    best_state = min(distances, key=distances.get)
-    dist = distances[best_state]
+    def classify_row(row):
+        vector = np.array([row['TrendScore'], row['MomentumScore'], row['VolatilityScore']])
+        distances = {state: np.linalg.norm(vector - np.array(profile)) for state, profile in state_profiles.items()}
+        best_state = min(distances, key=distances.get)
+        dist = distances[best_state]
+        diag = (
+            f"5d%: {row['5d_pct_SP500']:+.2f}%, MA20: {row['20d_slope_SP500']:+.2f}, "
+            f"RSI: {row['RSI_14_SP500']:.1f}, VIX: {row['Close_VIX']:.2f}, "
+            f"ATR: {row['Normalized_ATR']:.4f}, BBW: {row['BBW']:.2f}, "
+            f"Score: {[row['TrendScore'], row['MomentumScore'], row['VolatilityScore']]}, Dist: {dist:.2f}"
+        )
+        return pd.Series([best_state, dist, diag])
 
-    diag = (
-        f"5d%: {row['5d_pct_SP500']:+.2f}%, MA20: {row['20d_slope_SP500']:+.2f}, "
-        f"RSI: {row['RSI_14_SP500']:.1f}, VIX: {row['Close_VIX']:.2f}, "
-        f"ATR: {row['Normalized_ATR']:.4f}, BBW: {row['BBW']:.2f}, "
-        f"Score: {[row['TrendScore'], row['MomentumScore'], row['VolatilityScore']]}, Dist: {dist:.2f}"
-    )
-    return pd.Series([best_state, dist, diag])
+    df[['MarketState', 'EuclideanDist', 'Diagnostics']] = df.apply(classify_row, axis=1)
+    return df
 
-# ========== Apply Classification ==========
-df[['TrendScore', 'MomentumScore', 'VolatilityScore']] = df.apply(compute_scores, axis=1)
-df[['MarketState', 'EuclideanDist', 'Diagnostics']] = df.apply(classify_state, axis=1)
+# ========== Write to .txt Logs ==========
+def write_market_state_logs(df: pd.DataFrame, txt_path: str, diag_path: str):
+    logger.info("Writing to market state log files...")
+    existing_dates = set()
+    if os.path.exists(txt_path):
+        with open(txt_path, 'r') as f:
+            existing_dates = {line.split(",")[0].strip() for line in f.readlines()}
 
-# ========== Save Final CSV ==========
-if os.path.exists(output_csv):
-    df_old = pd.read_csv(output_csv)
-    df_old['Date'] = pd.to_datetime(df_old['Date'], errors='coerce')
-    df_combined = pd.concat([df_old, df], ignore_index=True).drop_duplicates(subset=["Date"]).sort_values("Date")
-else:
-    df_combined = df.sort_values("Date")
+    new_rows = 0
+    with open(txt_path, 'a') as f1, open(diag_path, 'a') as f2:
+        for _, row in df.iterrows():
+            if pd.isna(row['Date']):
+                continue
+            date_str = row['Date'].strftime('%Y-%m-%d')
+            if date_str in existing_dates:
+                continue
+            f1.write(f"{date_str}, {row['MarketState']}\n")
+            f2.write(f"{date_str}, {row['MarketState']}, {row['Diagnostics']}\n")
+            new_rows += 1
 
-df_combined.to_csv(output_csv, index=False)
-logger.info(f"✅ Market data with states saved to: {output_csv}")
+    logger.info(f"✅ Appended {new_rows} new entries to {txt_path} and {diag_path}")
 
-# ========== Append to TXT Logs ==========
-existing_dates = set()
-if os.path.exists(states_txt):
-    with open(states_txt, 'r') as f:
-        existing_dates = {line.split(",")[0].strip() for line in f.readlines()}
+# ========== Optional Standalone Entry ==========
+if __name__ == "__main__":
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        input_path = os.path.join(base_dir, "data", "MarketData_with_Indicators.csv")
+        output_path = os.path.join(base_dir, "data", "MarketData_with_States.csv")
+        txt_path = os.path.join(base_dir, "data", "MarketStates.txt")
+        diag_path = os.path.join(base_dir, "data", "MarketStates_Diagnostics.txt")
 
-new_rows = 0
-with open(states_txt, 'a') as f1, open(diag_txt, 'a') as f2:
-    for _, row in df.iterrows():
-        if pd.isna(row['Date']):
-            continue
-        date_str = row['Date'].strftime('%Y-%m-%d')
-        if date_str in existing_dates:
-            continue
-        f1.write(f"{date_str}, {row['MarketState']}\n")
-        f2.write(f"{date_str}, {row['MarketState']}, {row['Diagnostics']}\n")
-        new_rows += 1
+        df = pd.read_csv(input_path, parse_dates=["Date"])
+        df_classified = classify_market_states(df)
+        df_classified.to_csv(output_path, index=False)
+        write_market_state_logs(df_classified, txt_path, diag_path)
 
-logger.info(f"📌 {new_rows} new entries added to: {states_txt} and {diag_txt}")
-logger.info("🏁 Market state classification completed.")
+    except Exception as e:
+        logger.error(f"Failed to classify and save markets: {e}", exc_info=True)
+        sys.exit(1)
