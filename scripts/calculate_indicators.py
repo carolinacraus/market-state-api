@@ -106,6 +106,13 @@ def calculate_rsp_spy_ratio(df):
         logger.warning("Missing Close_RSP or Close_SPY columns. Skipping RSP/SPY ratio.")
     return df
 
+def calculate_normalized_atr(df):
+    if "5d_Slope_SP500" in df.columns and "Close_SP500" in df.columns:
+        df["Normalized_ATR"] = df["5d_Slope_SP500"] / df["Close_SP500"]
+    else:
+        logger.warning("Missing 5d_Slope_SP500 or Close_SP500 for Normalized_ATR calculation.")
+    return df
+
 def calculate_all_indicators(input_path, output_path):
     df = load_data(input_path)
     if df.empty:
@@ -119,6 +126,7 @@ def calculate_all_indicators(input_path, output_path):
     df = calculate_regression_slope(df)
     df = calculate_sma(df)
     df = calculate_intermarket_scores(df)
+    df = calculate_normalized_atr(df)  # ✅ NEW LINE
     df = calculate_bbw(df)
     df = calculate_rsp_spy_ratio(df)
 
