@@ -68,25 +68,28 @@ def run_daily_pipeline():
         if end_date:
             cmd.append(end_date)
 
-        logger.info(f"Running pipeline command: {cmd}")
+        logger.info(f"Running command: {' '.join(cmd)}")
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             check=True
         )
-        logger.info(f"Subprocess output: {result.stdout}")
-        return jsonify({"status": f"Pipeline executed successfully", "stdout": result.stdout}), 200
+
+        logger.info("STDOUT:\n" + result.stdout)
+        logger.info("STDERR:\n" + result.stderr)
+        return jsonify({"status": "Pipeline completed successfully"}), 200
 
     except subprocess.CalledProcessError as e:
         logger.error("Subprocess failed", exc_info=True)
-        logger.error(f"STDOUT: {e.stdout}")
-        logger.error(f"STDERR: {e.stderr}")
+        logger.error("STDOUT:\n" + (e.stdout or ""))
+        logger.error("STDERR:\n" + (e.stderr or ""))
         return jsonify({
-            "error": f"Pipeline failed",
+            "error": "Pipeline failed",
             "stdout": e.stdout,
             "stderr": e.stderr
         }), 500
+
 
 @app.route("/download/<filename>", methods=["GET"])
 def download_file(filename):
