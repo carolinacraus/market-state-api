@@ -1,0 +1,58 @@
+2025-06-26 17:13:38,649 - INFO - Connected to SQL Server.
+2025-06-26 17:13:38,980 - INFO - Retrieved 10453 rows from SQL.
+2025-06-26 17:13:39,093 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\market_breadth_data.csv
+2025-06-26 17:13:39,166 - INFO - Closed SQL connection.
+2025-06-26 17:17:50,011 - INFO - Connected to SQL Server.
+2025-06-26 17:17:50,380 - INFO - Retrieved 10453 rows from SQL Server.
+2025-06-26 17:17:50,491 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\market_breadth_data.csv
+2025-06-26 17:17:50,606 - INFO - Merged NYMO and NYAD saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-06-26 17:17:50,641 - ERROR - Pipeline failed: You are trying to merge on datetime64[ns] and object columns for key 'Date'. If you wish to proceed you should use pd.concat
+2025-06-26 17:17:50,710 - INFO - Closed SQL connection.
+2025-06-26 17:44:05,171 - INFO - Connected to SQL Server.
+2025-06-26 17:44:05,559 - INFO - Retrieved 10453 rows from SQL Server.
+2025-06-26 17:44:05,672 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\market_breadth_data.csv
+2025-06-26 17:44:05,767 - INFO - Merged NYMO and NYAD saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-06-26 17:44:05,804 - ERROR - Pipeline failed: You are trying to merge on datetime64[ns] and object columns for key 'Date'. If you wish to proceed you should use pd.concat
+2025-06-26 17:44:05,885 - INFO - Closed SQL connection.
+2025-06-26 17:46:55,025 - INFO - Connected to SQL Server.
+2025-06-26 17:46:55,465 - INFO - Retrieved 10453 rows from SQL Server.
+2025-06-26 17:46:55,571 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\market_breadth_data.csv
+2025-06-26 17:46:55,662 - INFO - Closed SQL connection.
+2025-06-26 17:46:55,809 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-06-26 17:46:56,199 - INFO - Merged breadth data into MarketStates_Data.csv
+2025-06-26 17:51:57,274 - INFO - Connected to SQL Server.
+2025-06-26 17:51:57,637 - INFO - Retrieved 10453 rows from SQL Server.
+2025-06-26 17:51:57,746 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\market_breadth_data.csv
+2025-06-26 17:51:57,822 - INFO - Closed SQL connection.
+2025-06-26 17:51:57,976 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-06-26 17:51:58,430 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-06-26 17:55:06,207 - INFO - Connected to SQL Server.
+2025-06-26 17:55:06,520 - INFO - Retrieved 9237 rows from SQL Server (from 2005-01-01).
+2025-06-26 17:55:06,625 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\market_breadth_data.csv
+2025-06-26 17:55:06,697 - INFO - Closed SQL connection.
+2025-06-26 17:55:06,833 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-06-26 17:55:07,179 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-03 16:09:44,474 - INFO - Connected to SQL Server.
+2025-07-03 16:09:44,834 - INFO - Retrieved 9246 rows from SQL Server (from 2005-01-01).
+2025-07-03 16:09:44,928 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\market_breadth_data.csv
+2025-07-03 16:09:45,005 - INFO - Closed SQL connection.
+2025-07-03 16:09:45,162 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-03 16:09:45,522 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-03 16:22:01,278 - INFO - Connected to SQL Server.
+2025-07-03 16:22:01,606 - INFO - Retrieved 9246 rows from SQL Server (from 2005-01-01).
+2025-07-03 16:22:01,685 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\market_breadth_data.csv
+2025-07-03 16:22:01,763 - INFO - Closed SQL connection.
+2025-07-03 16:22:01,919 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-03 16:22:02,325 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-03 17:01:07,573 - INFO - Connected to SQL Server.
+2025-07-03 17:01:07,860 - INFO - Retrieved 9247 rows from SQL Server (from 2005-01-01).
+2025-07-03 17:01:07,957 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\market_breadth_data.csv
+2025-07-03 17:01:08,031 - INFO - Closed SQL connection.
+2025-07-03 17:01:08,186 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-03 17:01:08,540 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-03 17:13:28,964 - INFO - Connected to SQL Server.
+2025-07-03 17:13:29,261 - INFO - Retrieved 9247 rows from SQL Server (from 2005-01-01).
+2025-07-03 17:13:29,339 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\market_breadth_data.csv
+2025-07-03 17:13:29,417 - INFO - Closed SQL connection.
+2025-07-03 17:13:29,534 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-03 17:13:29,870 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv

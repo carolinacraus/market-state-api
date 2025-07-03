@@ -1,0 +1,75 @@
+2025-07-03 15:56:14,504 - INFO - Starting pipeline with start_date=2005-01-01, end_date=2025-07-03
+2025-07-03 15:56:14,504 - ERROR - MarketStates_Data.csv not found. Run initial build first.
+2025-07-03 16:01:57,501 - INFO - Starting pipeline with start_date=2005-01-01, end_date=2025-07-03
+2025-07-03 16:01:57,501 - ERROR - MarketStates_Data.csv not found. Run initial build first.
+2025-07-03 16:09:35,818 - INFO - Starting pipeline with start_date=2005-01-01, end_date=2025-07-03
+2025-07-03 16:09:35,880 - INFO - Fetching FMP market data from 2005-01-01 to 2025-07-03
+2025-07-03 16:09:43,974 - INFO - Appended 5158 new row(s) to MarketStates_Data.csv
+2025-07-03 16:09:43,974 - INFO - Gathering market breadth data from SQL
+2025-07-03 16:09:45,522 - INFO - Market breadth merged successfully
+2025-07-03 16:09:45,787 - INFO - Computing indicators for 5 new dates: 2025-06-27, 2025-06-30, 2025-07-01, 2025-07-02, 2025-07-03
+2025-07-03 16:09:45,912 - ERROR - [Step 3 - Indicators] failed: [Errno 13] Permission denied: 'C:\\Users\\carocraus\\PycharmProjects\\MarketStates_RailwayAutomation\\market-state-api\\data\\MarketData_with_Indicators.csv'
+Traceback (most recent call last):
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\scripts\update_daily_pipeline.py", line 106, in update_pipeline
+    final_df.to_csv(indicator_path, index=False)
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\.venv\Lib\site-packages\pandas\util\_decorators.py", line 333, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\.venv\Lib\site-packages\pandas\core\generic.py", line 3986, in to_csv
+    return DataFrameRenderer(formatter).to_csv(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\.venv\Lib\site-packages\pandas\io\formats\format.py", line 1014, in to_csv
+    csv_formatter.save()
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\.venv\Lib\site-packages\pandas\io\formats\csvs.py", line 251, in save
+    with get_handle(
+         ^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\.venv\Lib\site-packages\pandas\io\common.py", line 873, in get_handle
+    handle = open(
+             ^^^^^
+PermissionError: [Errno 13] Permission denied: 'C:\\Users\\carocraus\\PycharmProjects\\MarketStates_RailwayAutomation\\market-state-api\\data\\MarketData_with_Indicators.csv'
+2025-07-03 16:11:16,932 - INFO - Starting pipeline with start_date=None, end_date=None
+2025-07-03 16:11:16,983 - INFO - Fetching FMP market data from 2025-07-04 to 2025-07-03
+2025-07-03 16:11:25,166 - ERROR - [Step 1 - FMP fetch] failed: start_date must be before or equal to end_date.
+Traceback (most recent call last):
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\scripts\update_daily_pipeline.py", line 54, in update_pipeline
+    valid_days = get_valid_trading_days(start_date, end_date)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\scripts\DataRetrieval_FMP.py", line 33, in get_valid_trading_days
+    schedule = nyse.schedule(start_date=start_date, end_date=end_date)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\.venv\Lib\site-packages\pandas_market_calendars\market_calendar.py", line 699, in schedule
+    raise ValueError("start_date must be before or equal to end_date.")
+ValueError: start_date must be before or equal to end_date.
+2025-07-03 16:21:39,738 - INFO - Starting pipeline with start_date=None, end_date=None
+2025-07-03 16:21:39,799 - INFO - Fetching FMP market data from 2025-07-02 to 2025-07-03
+2025-07-03 16:21:52,169 - INFO - Starting pipeline with start_date=2005-01-01, end_date=2025-07-03
+2025-07-03 16:21:52,254 - INFO - Fetching FMP market data from 2005-01-01 to 2025-07-03
+2025-07-03 16:22:00,872 - INFO - Appended 5158 new row(s) to MarketStates_Data.csv
+2025-07-03 16:22:00,872 - INFO - Gathering market breadth data from SQL
+2025-07-03 16:22:02,330 - INFO - Market breadth merged successfully
+2025-07-03 16:22:02,513 - INFO - Computing indicators for 5 new dates: 2025-06-27, 2025-06-30, 2025-07-01, 2025-07-02, 2025-07-03
+2025-07-03 16:22:03,560 - INFO - Appended indicators for 5 date(s) to MarketData_with_Indicators.csv
+2025-07-03 16:22:03,560 - INFO - Temporary files cleaned up
+2025-07-03 16:22:06,919 - INFO - Market states classified and saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_with_States.csv
+2025-07-03 17:04:42,209 - INFO - Starting pipeline with start_date=None, end_date=None
+2025-07-03 17:04:42,265 - INFO - Fetching FMP market data from 2025-07-04 to 2025-07-03
+2025-07-03 17:04:55,262 - ERROR - [Step 1 - FMP fetch] failed: start_date must be before or equal to end_date.
+Traceback (most recent call last):
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\scripts\update_daily_pipeline.py", line 54, in update_pipeline
+    valid_days = get_valid_trading_days(start_date, end_date)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\scripts\DataRetrieval_FMP.py", line 33, in get_valid_trading_days
+    schedule = nyse.schedule(start_date=start_date, end_date=end_date)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\.venv\Lib\site-packages\pandas_market_calendars\market_calendar.py", line 699, in schedule
+    raise ValueError("start_date must be before or equal to end_date.")
+ValueError: start_date must be before or equal to end_date.
+2025-07-03 17:13:20,558 - INFO - Starting pipeline with start_date=2005-01-01, end_date=2025-07-03
+2025-07-03 17:13:20,589 - INFO - Fetching FMP market data from 2005-01-01 to 2025-07-03
+2025-07-03 17:13:28,511 - INFO - Appended 5158 new row(s) to MarketStates_Data.csv
+2025-07-03 17:13:28,511 - INFO - Gathering market breadth data from SQL
+2025-07-03 17:13:29,886 - INFO - Market breadth merged successfully
+2025-07-03 17:13:30,105 - INFO - Computing indicators for 1 new dates: 2025-07-03
+2025-07-03 17:13:31,042 - INFO - Appended indicators for 1 date(s) to MarketData_with_Indicators.csv
+2025-07-03 17:13:31,042 - INFO - Temporary files cleaned up
+2025-07-03 17:13:34,245 - INFO - Market states classified and saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_with_States.csv
