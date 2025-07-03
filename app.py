@@ -4,6 +4,7 @@ import os
 import sys
 from scripts.logger import get_logger
 from datetime import datetime
+import subprocess
 
 app = Flask(__name__)
 logger = get_logger("flask_app")
@@ -68,18 +69,24 @@ def run_daily_pipeline():
             cmd.append(end_date)
 
         logger.info(f"Running pipeline command: {cmd}")
-        subprocess.run(cmd, check=True)
-        return jsonify({"status": f"Pipeline executed from {start_date or 'last'} to {end_date}"}), 200
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        logger.info(f"Subprocess output: {result.stdout}")
+        return jsonify({"status": f"Pipeline executed successfully", "stdout": result.stdout}), 200
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"Subprocess failed with return code {e.returncode}", exc_info=True)
-        logger.error(f"Command output: {e.output if hasattr(e, 'output') else 'No output captured'}")
-        return jsonify({"error": f"Pipeline failed: {str(e)}"}), 500
-
-    except Exception as e:
-        logger.error(f"Unexpected error in /run-daily-pipeline: {e}", exc_info=True)
-        return jsonify({"error": f"Unhandled error: {str(e)}"}), 500
-
+        logger.error("Subprocess failed", exc_info=True)
+        logger.error(f"STDOUT: {e.stdout}")
+        logger.error(f"STDERR: {e.stderr}")
+        return jsonify({
+            "error": f"Pipeline failed",
+            "stdout": e.stdout,
+            "stderr": e.stderr
+        }), 500
 
 @app.route("/download/<filename>", methods=["GET"])
 def download_file(filename):
