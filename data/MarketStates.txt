@@ -5155,4 +5155,3 @@
 2025-06-30, Volatile Chop
 2025-07-01, Volatile Chop
 2025-07-02, Volatile Chop
-2025-07-03, Volatile Chop
