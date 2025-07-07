@@ -9,7 +9,7 @@ import sys
 from DataRetrieval_FMP import fetch_all_tickers, get_valid_trading_days, TICKER_MAP
 from MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data, merge_with_market_data
 from calculate_indicators import calculate_all_indicators
-from classify_markets import classify_market_state
+from classify_markets import classify_market_states
 from logger import get_logger
 
 with open("pipeline_crash_log.txt", "a") as f:
@@ -115,7 +115,7 @@ def update_pipeline(start_date=None, end_date=None):
     # Step 4: Classify final market states
     try:
         df_classified = final_df.copy()
-        df_classified[['MarketState', 'Score', 'Diagnostics']] = df_classified.apply(classify_market_state, axis=1)
+        df_classified[['MarketState', 'Score', 'Diagnostics']] = df_classified.apply(classify_market_states, axis=1)
         df_classified.to_csv(state_output_path, index=False)
         logger.info(f"Market states classified and saved to {state_output_path}")
 
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     except Exception as e:
         import traceback
         with open("pipeline_crash_log.txt", "a") as f:
-            f.write("❌ Exception caught:\n")
+            f.write("Exception caught:\n")
             traceback.print_exc(file=f)
         raise
 
