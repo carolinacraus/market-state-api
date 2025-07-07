@@ -4,7 +4,6 @@ import os
 import sys
 from scripts.logger import get_logger
 from datetime import datetime
-import subprocess
 
 app = Flask(__name__)
 logger = get_logger("flask_app")
@@ -61,35 +60,17 @@ def run_daily_pipeline():
     try:
         start_date = request.json.get("start_date", None)
         end_date = request.json.get("end_date") or datetime.today().strftime("%Y-%m-%d")
-
         cmd = [sys.executable, "scripts/update_daily_pipeline.py"]
         if start_date:
             cmd.append(start_date)
         if end_date:
             cmd.append(end_date)
-
-        logger.info(f"Running command: {' '.join(cmd)}")
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True
-        )
-
-        logger.info("STDOUT:\n" + result.stdout)
-        logger.info("STDERR:\n" + result.stderr)
-        return jsonify({"status": "Pipeline completed successfully"}), 200
-
+        subprocess.run(cmd, check=True)
+        logger.info(f"Daily pipeline run from {start_date or 'last update'} to {end_date}")
+        return jsonify({"status": f"Full daily pipeline executed from {start_date or 'last update'} to {end_date}"}), 200
     except subprocess.CalledProcessError as e:
-        logger.error("Subprocess failed", exc_info=True)
-        logger.error("STDOUT:\n" + (e.stdout or ""))
-        logger.error("STDERR:\n" + (e.stderr or ""))
-        return jsonify({
-            "error": "Pipeline failed",
-            "stdout": e.stdout,
-            "stderr": e.stderr
-        }), 500
-
+        logger.error(f"Error running daily pipeline: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/download/<filename>", methods=["GET"])
 def download_file(filename):
@@ -126,6 +107,13 @@ def download_diagnostics():
 @app.route("/download/states-txt", methods=["GET"])
 def download_states_txt():
     return _send_data_file("MarketStates.txt")
+
+@app.route("/download/logs/pipeline-crash", methods=["GET"])
+def download_pipeline_crash_log():
+    crash_path = os.path.join(os.path.dirname(__file__), "pipeline_crash_log.txt")
+    if not os.path.exists(crash_path):
+        return jsonify({"error": "No crash log found."}), 404
+    return send_file(crash_path, as_attachment=True)
 
 def _send_data_file(filename):
     try:
