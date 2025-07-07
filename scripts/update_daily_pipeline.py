@@ -11,6 +11,7 @@ from MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data,
 from calculate_indicators import calculate_all_indicators
 from classify_markets import classify_market_states
 from logger import get_logger
+from sql_upload import upload_market_states_to_sql
 
 with open("pipeline_crash_log.txt", "a") as f:
     f.write(f"\n=== Pipeline Triggered ===\n")
@@ -122,6 +123,19 @@ def update_pipeline(start_date=None, end_date=None):
     except Exception as e:
         logger.error(f"[Step 4 - Classification] failed: {e}")
         return
+
+    # Step 5: Upload to SQL
+    try:
+        logger.info("Uploading market states to SQL...")
+        upload_market_states_to_sql(
+            csv_path=state_output_path,
+            list_name="Market States 2024 Euclidean",
+            list_description="Historical Market States List 2024 Euclidean Scoring System 6-19-2025"
+        )
+        logger.info("Market states uploaded to SQL successfully")
+    except Exception as e:
+        logger.error(f"[Step 5 - SQL Upload] failed: {e}")
+
 
     logger.info("Full pipeline completed successfully")
 
