@@ -4,7 +4,7 @@ import os
 import sys
 from scripts.logger import get_logger
 from datetime import datetime
-from scripts.sql_upload import upload_market_states_to_sql  # at the top
+from scripts.sql_upload import upload_market_states # at the top
 import pyodbc
 
 app = Flask(__name__)
@@ -75,19 +75,23 @@ def run_daily_pipeline():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/upload-market-states", methods=["POST"])
-def upload_market_states():
+def run_sql_upload():
     try:
-        csv_path = os.path.join(os.path.dirname(__file__), "data", "MarketData_with_States.csv")
+        # Define path to MarketStates.txt
+        txt_path = os.path.join(os.path.dirname(__file__), "data", "MarketStates.txt")
+
+        # Optional overrides from request
         list_name = request.json.get("list_name", "Market States 2024")
         list_description = request.json.get("list_description", "Historical Market States List 2024")
 
-        upload_market_states_to_sql(csv_path, list_name, list_description)
+        # Call the modular function
+        upload_market_states(txt_file_path=txt_path, list_name=list_name, list_description=list_description)
 
-        logger.info("✅ Market states uploaded to SQL from API call.")
+        logger.info("Market states uploaded to SQL from API call.")
         return jsonify({"status": "Upload to SQL successful"}), 200
 
     except Exception as e:
-        logger.error(f"❌ SQL upload failed: {e}", exc_info=True)
+        logger.error(f"SQL upload failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route("/download/<filename>", methods=["GET"])
@@ -141,7 +145,7 @@ def test_sql_connection():
         }), 200
 
     except Exception as e:
-        logger.error(f"❌ SQL connection failed: {e}", exc_info=True)
+        logger.error(f"SQL connection failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 # === Dedicated Download Routes ===

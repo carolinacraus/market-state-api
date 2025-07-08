@@ -7,3 +7,4 @@ pandas_market_calendars
 dotenv
 google
 datetime
+pymssql
