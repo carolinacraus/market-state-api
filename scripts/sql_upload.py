@@ -9,11 +9,11 @@ load_dotenv()  # Make sure this is called early
 def upload_market_states_to_sql(csv_path, list_name, list_description):
     # Database Connection String
     conn_str = (
-        f"DRIVER={{{os.getenv('DB_DRIVER')}}};"
-        f"SERVER={os.getenv('DB_SERVER')};"
-        f"DATABASE={os.getenv('DB_NAME')};"
-        f"UID={os.getenv('DB_USER')};"
-        f"PWD={os.getenv('DB_PASSWORD')};"
+        f"DRIVER={{{os.getenv('SQL_DRIVER_MS')}}};"
+        f"SERVER={os.getenv('SQL_SERVER_MS')};"
+        f"DATABASE={os.getenv('SQL_NAME_MS')};"
+        f"UID={os.getenv('SQL_USER_MS')};"
+        f"PWD={os.getenv('SQL_PASSWORD_MS')};"
     )
     conn = pyodbc.connect(conn_str)
     cursor = conn.cursor()
