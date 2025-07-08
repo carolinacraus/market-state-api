@@ -4,6 +4,7 @@ import os
 import sys
 from scripts.logger import get_logger
 from datetime import datetime
+from scripts.sql_upload import upload_market_states_to_sql  # at the top
 
 app = Flask(__name__)
 logger = get_logger("flask_app")
@@ -70,6 +71,22 @@ def run_daily_pipeline():
         return jsonify({"status": f"Full daily pipeline executed from {start_date or 'last update'} to {end_date}"}), 200
     except subprocess.CalledProcessError as e:
         logger.error(f"Error running daily pipeline: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/upload-market-states", methods=["POST"])
+def upload_market_states():
+    try:
+        csv_path = os.path.join(os.path.dirname(__file__), "data", "MarketData_with_States.csv")
+        list_name = request.json.get("list_name", "Market States 2024")
+        list_description = request.json.get("list_description", "Historical Market States List 2024")
+
+        upload_market_states_to_sql(csv_path, list_name, list_description)
+
+        logger.info("✅ Market states uploaded to SQL from API call.")
+        return jsonify({"status": "Upload to SQL successful"}), 200
+
+    except Exception as e:
+        logger.error(f"❌ SQL upload failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route("/download/<filename>", methods=["GET"])

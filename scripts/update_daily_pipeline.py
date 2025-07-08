@@ -125,16 +125,16 @@ def update_pipeline(start_date=None, end_date=None):
         return
 
     # Step 5: Upload to SQL
-    try:
-        logger.info("Uploading market states to SQL...")
-        upload_market_states_to_sql(
-            csv_path=state_output_path,
-            list_name="Market States 2024 Euclidean",
-            list_description="Historical Market States List 2024 Euclidean Scoring System 6-19-2025"
-        )
-        logger.info("Market states uploaded to SQL successfully")
-    except Exception as e:
-        logger.error(f"[Step 5 - SQL Upload] failed: {e}")
+    # try:
+    #     logger.info("Uploading market states to SQL...")
+    #     upload_market_states_to_sql(
+    #         csv_path=state_output_path,
+    #         list_name="Market States 2024 Euclidean",
+    #         list_description="Historical Market States List 2024 Euclidean Scoring System 6-19-2025"
+    #     )
+    #     logger.info("Market states uploaded to SQL successfully")
+    # except Exception as e:
+    #     logger.error(f"[Step 5 - SQL Upload] failed: {e}")
 
 
     logger.info("Full pipeline completed successfully")
