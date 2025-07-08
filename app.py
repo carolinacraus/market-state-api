@@ -5,6 +5,7 @@ import sys
 from scripts.logger import get_logger
 from datetime import datetime
 from scripts.sql_upload import upload_market_states_to_sql  # at the top
+import pyodbc
 
 app = Flask(__name__)
 logger = get_logger("flask_app")
@@ -103,6 +104,46 @@ def download_file(filename):
     except Exception as e:
         logger.error(f"Error sending file: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route("/test-sql-connection", methods=["GET"])
+def test_sql_connection():
+    try:
+        # Load from .env
+        driver = os.getenv("SQL_DRIVER_MS")
+        server = os.getenv("SQL_SERVER_MS")
+        db = os.getenv("SQL_DATABASE_MS")
+        user = os.getenv("SQL_UID_MS")
+        pwd = os.getenv("SQL_PWD_MS")
+
+        # Validate
+        if not all([driver, server, db, user, pwd]):
+            missing = [k for k in ["SQL_DRIVER_MS", "SQL_SERVER_MS", "SQL_DATABASE_MS", "SQL_UID_MS", "SQL_PWD_MS"] if not os.getenv(k)]
+            return jsonify({"error": f"Missing env vars: {', '.join(missing)}"}), 500
+
+        # Connect
+        conn_str = (
+            f"DRIVER={{{driver}}};"
+            f"SERVER={server};"
+            f"DATABASE={db};"
+            f"UID={user};"
+            f"PWD={pwd};"
+        )
+        conn = pyodbc.connect(conn_str, timeout=5)
+        cursor = conn.cursor()
+        cursor.execute("SELECT GETDATE()")
+        result = cursor.fetchone()
+
+        return jsonify({
+            "status": "✅ SQL connection successful",
+            "datetime": str(result[0]),
+            "server": server,
+            "database": db
+        }), 200
+
+    except Exception as e:
+        logger.error(f"❌ SQL connection failed: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
 # === Dedicated Download Routes ===
 
 @app.route("/download/market-data", methods=["GET"])
