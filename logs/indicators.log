@@ -18,3 +18,15 @@
 2025-07-03 17:13:30,136 - INFO - Calculating indicators...
 2025-07-03 17:13:30,167 - WARNING - Missing Close_RSP or Close_SPY columns. Skipping RSP/SPY ratio.
 2025-07-03 17:13:30,167 - INFO - Indicators saved to: C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\temp_new_indicators.csv
+2025-07-08 18:01:23,512 - INFO - Loaded data from C:\Users\carocraus\PycharmProjects\market-state-api\data\MarketStates_Data.csv with 5160 rows.
+2025-07-08 18:01:23,512 - INFO - Calculating indicators...
+2025-07-08 18:01:43,087 - WARNING - Missing Close_RSP or Close_SPY columns. Skipping RSP/SPY ratio.
+2025-07-08 18:01:43,946 - INFO - Indicators saved to: C:\Users\carocraus\PycharmProjects\market-state-api\data\MarketData_with_Indicators.csv
+2025-07-09 11:41:29,116 - INFO - Loaded data from C:\Users\carocraus\PycharmProjects\market-state-api\data\MarketStates_Data.csv with 5160 rows.
+2025-07-09 11:41:29,117 - INFO - Calculating indicators...
+2025-07-09 11:41:46,644 - WARNING - Missing Close_RSP or Close_SPY columns. Skipping RSP/SPY ratio.
+2025-07-09 11:41:47,352 - INFO - Indicators saved to: C:\Users\carocraus\PycharmProjects\market-state-api\data\MarketData_with_Indicators.csv
+2025-07-09 11:48:59,327 - INFO - Loaded data from C:\Users\carocraus\PycharmProjects\market-state-api\data\MarketStates_Data.csv with 5160 rows.
+2025-07-09 11:48:59,328 - INFO - Calculating indicators...
+2025-07-09 11:49:17,225 - WARNING - Missing Close_RSP or Close_SPY columns. Skipping RSP/SPY ratio.
+2025-07-09 11:49:17,984 - INFO - Indicators saved to: C:\Users\carocraus\PycharmProjects\market-state-api\data\MarketData_with_Indicators.csv

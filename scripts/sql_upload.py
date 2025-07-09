@@ -32,7 +32,7 @@ def upload_market_states(txt_file_path="data/MarketStates.txt", list_name="Marke
             conn.commit()
             cursor.execute("SELECT @@IDENTITY")
             market_state_id = cursor.fetchone()[0]
-            print(f"🆕 Inserted new MarketStates entry. Using MarketStateId: {market_state_id}")
+            print(f"Inserted new MarketStates entry. Using MarketStateId: {market_state_id}")
 
         # Step 2: Create mapping of MarketState → Direction ID
         market_state_mapping = {}
@@ -41,9 +41,8 @@ def upload_market_states(txt_file_path="data/MarketStates.txt", list_name="Marke
             market_state_mapping[row[1].strip()] = row[0]
 
         # Step 3: Read txt file
-        df_raw = pd.read_csv(txt_file_path, header=None)
-        df_split = df_raw[0].str.split(",", n=1, expand=True)
-        df_split.columns = ["Date", "MarketState"]
+        df_split = pd.read_csv(txt_file_path, names=["Date", "MarketState"])
+
         df_split["Date"] = pd.to_datetime(df_split["Date"].str.strip(), errors="coerce")
         df_split["MarketState"] = df_split["MarketState"].astype(str).str.strip()
 
@@ -65,7 +64,7 @@ def upload_market_states(txt_file_path="data/MarketStates.txt", list_name="Marke
                 )
                 new_rows += 1
             else:
-                print(f"⚠Skipping row {index}: invalid or duplicate → {date}, {state}")
+                print(f"Skipping row {index}: invalid or duplicate → {date}, {state}")
 
         # Finalize
         conn.commit()

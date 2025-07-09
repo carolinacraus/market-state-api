@@ -91,26 +91,36 @@ def classify_market_states(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 # ========== Write to .txt Logs ==========
-def write_market_state_logs(df: pd.DataFrame, txt_path: str, diag_path: str):
-    logger.info("Writing to market state log files...")
+def append_to_txt_logs(df: pd.DataFrame, data_dir: str, logger=None):
+    if logger:
+        logger.info("Appending market state logs to txt files...")
+    else:
+        print("Appending market state logs to txt files...")
+
+    states_txt = os.path.join(data_dir, "MarketStates.txt")
+    diag_txt = os.path.join(data_dir, "MarketStates_Diagnostics.txt")
+
     existing_dates = set()
-    if os.path.exists(txt_path):
-        with open(txt_path, 'r') as f:
+    if os.path.exists(states_txt):
+        with open(states_txt, 'r') as f:
             existing_dates = {line.split(",")[0].strip() for line in f.readlines()}
 
     new_rows = 0
-    with open(txt_path, 'a') as f1, open(diag_path, 'a') as f2:
+    with open(states_txt, 'a') as f1, open(diag_txt, 'a') as f2:
         for _, row in df.iterrows():
             if pd.isna(row['Date']):
                 continue
-            date_str = row['Date'].strftime('%Y-%m-%d')
+            date_str = pd.to_datetime(row['Date']).strftime('%Y-%m-%d')
             if date_str in existing_dates:
                 continue
             f1.write(f"{date_str}, {row['MarketState']}\n")
             f2.write(f"{date_str}, {row['MarketState']}, {row['Diagnostics']}\n")
             new_rows += 1
 
-    logger.info(f"✅ Appended {new_rows} new entries to {txt_path} and {diag_path}")
+    if logger:
+        logger.info(f"Appended {new_rows} new rows to MarketStates.txt and MarketStates_Diagnostics.txt")
+    else:
+        print(f"Appended {new_rows} new rows to MarketStates.txt and MarketStates_Diagnostics.txt")
 
 # ========== Optional Standalone Entry ==========
 if __name__ == "__main__":
@@ -118,13 +128,12 @@ if __name__ == "__main__":
         base_dir = os.path.dirname(os.path.abspath(__file__))
         input_path = os.path.join(base_dir, "data", "MarketData_with_Indicators.csv")
         output_path = os.path.join(base_dir, "data", "MarketData_with_States.csv")
-        txt_path = os.path.join(base_dir, "data", "MarketStates.txt")
-        diag_path = os.path.join(base_dir, "data", "MarketStates_Diagnostics.txt")
 
         df = pd.read_csv(input_path, parse_dates=["Date"])
         df_classified = classify_market_states(df)
         df_classified.to_csv(output_path, index=False)
-        write_market_state_logs(df_classified, txt_path, diag_path)
+
+        append_to_txt_logs(df_classified, os.path.join(base_dir, "data"), logger)
 
     except Exception as e:
         logger.error(f"Failed to classify and save markets: {e}", exc_info=True)

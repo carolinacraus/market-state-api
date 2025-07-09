@@ -56,3 +56,21 @@
 2025-07-03 17:13:29,417 - INFO - Closed SQL connection.
 2025-07-03 17:13:29,534 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\MarketStates_RailwayAutomation\market-state-api\data\MarketData_NYAD_NYMO.csv
 2025-07-03 17:13:29,870 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-08 18:01:22,420 - INFO - Connected to SQL Server.
+2025-07-08 18:01:22,802 - INFO - Retrieved 9250 rows from SQL Server (from 2005-01-01).
+2025-07-08 18:01:22,876 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\market-state-api\data\market_breadth_data.csv
+2025-07-08 18:01:22,951 - INFO - Closed SQL connection.
+2025-07-08 18:01:23,085 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-08 18:01:23,454 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-09 11:41:28,017 - INFO - Connected to SQL Server.
+2025-07-09 11:41:28,415 - INFO - Retrieved 9250 rows from SQL Server (from 2005-01-01).
+2025-07-09 11:41:28,487 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\market-state-api\data\market_breadth_data.csv
+2025-07-09 11:41:28,569 - INFO - Closed SQL connection.
+2025-07-09 11:41:28,707 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-09 11:41:29,051 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-09 11:48:58,343 - INFO - Connected to SQL Server.
+2025-07-09 11:48:58,665 - INFO - Retrieved 9250 rows from SQL Server (from 2005-01-01).
+2025-07-09 11:48:58,752 - INFO - Saved market_breadth_data.csv to C:\Users\carocraus\PycharmProjects\market-state-api\data\market_breadth_data.csv
+2025-07-09 11:48:58,836 - INFO - Closed SQL connection.
+2025-07-09 11:48:58,968 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-09 11:48:59,274 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv

@@ -23,3 +23,48 @@ Traceback (most recent call last):
 FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\carocraus\\PycharmProjects\\MarketStates_RailwayAutomation\\market-state-api\\scripts\\data\\MarketData_with_Indicators.csv'
 2025-07-03 17:13:31,042 - INFO - Scoring and classifying market states...
 2025-07-03 17:13:34,245 - INFO - Writing to market state log files...
+2025-07-08 16:27:50,347 - ERROR - Failed to classify and save markets: [Errno 2] No such file or directory: 'C:\\Users\\carocraus\\PycharmProjects\\market-state-api\\scripts\\data\\MarketData_with_Indicators.csv'
+Traceback (most recent call last):
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\scripts\classify_markets.py", line 124, in <module>
+    df = pd.read_csv(input_path, parse_dates=["Date"])
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 620, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1620, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1880, in _make_engine
+    self.handles = get_handle(
+                   ^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\.venv\Lib\site-packages\pandas\io\common.py", line 873, in get_handle
+    handle = open(
+             ^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\carocraus\\PycharmProjects\\market-state-api\\scripts\\data\\MarketData_with_Indicators.csv'
+2025-07-08 16:29:05,418 - ERROR - Failed to classify and save markets: [Errno 2] No such file or directory: 'C:\\Users\\carocraus\\PycharmProjects\\market-state-api\\scripts\\data\\MarketData_with_Indicators.csv'
+Traceback (most recent call last):
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\scripts\classify_markets.py", line 124, in <module>
+    df = pd.read_csv(input_path, parse_dates=["Date"])
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 620, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1620, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1880, in _make_engine
+    self.handles = get_handle(
+                   ^^^^^^^^^^^
+  File "C:\Users\carocraus\PycharmProjects\market-state-api\.venv\Lib\site-packages\pandas\io\common.py", line 873, in get_handle
+    handle = open(
+             ^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\carocraus\\PycharmProjects\\market-state-api\\scripts\\data\\MarketData_with_Indicators.csv'
+2025-07-08 18:01:44,096 - INFO - Scoring and classifying market states...
+2025-07-09 11:41:47,472 - INFO - Scoring and classifying market states...
+2025-07-09 11:49:18,107 - INFO - Scoring and classifying market states...

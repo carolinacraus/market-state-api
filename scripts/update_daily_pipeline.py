@@ -11,7 +11,9 @@ from MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data,
 from calculate_indicators import calculate_all_indicators
 from classify_markets import classify_market_states
 from logger import get_logger
-from sql_upload import upload_market_states_to_sql
+from sql_upload import upload_market_states
+from classify_markets import classify_market_states, append_to_txt_logs
+
 
 with open("pipeline_crash_log.txt", "a") as f:
     f.write(f"\n=== Pipeline Triggered ===\n")
