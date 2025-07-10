@@ -61,28 +61,21 @@ def run_classification():
 @app.route("/run-daily-pipeline", methods=["POST"])
 def run_daily_pipeline():
     try:
-        start_date = request.json.get("start_date", None)
-        end_date = request.json.get("end_date") or datetime.today().strftime("%Y-%m-%d")
-        cmd = [sys.executable, "scripts/update_daily_pipeline.py"]
-        if start_date:
-            cmd.append(start_date)
-        if end_date:
-            cmd.append(end_date)
-        subprocess.run(cmd, check=True)
-        logger.info(f"Daily pipeline run from {start_date or 'last update'} to {end_date}")
-        return jsonify({"status": f"Full daily pipeline executed from {start_date or 'last update'} to {end_date}"}), 200
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error running daily pipeline: {e}")
+        daily_data_retrieval()
+        logger.info("Daily pipeline executed using in-memory daily_data_retrieval()")
+        return jsonify({"status": "Daily pipeline completed successfully"}), 200
+    except Exception as e:
+        logger.error(f"Daily pipeline failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route("/update-local-files", methods=["POST"])
 def update_local_files():
     try:
         daily_data_retrieval()
-        logger.info("✅ Local files updated via /update-local-files API route.")
+        logger.info("Local files updated via /update-local-files API route.")
         return jsonify({"status": "Local file update successful"}), 200
     except Exception as e:
-        logger.error(f"❌ Local file update failed: {e}", exc_info=True)
+        logger.error(f"Local file update failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route("/upload-market-states", methods=["POST"])
