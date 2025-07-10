@@ -74,3 +74,75 @@
 2025-07-09 11:48:58,836 - INFO - Closed SQL connection.
 2025-07-09 11:48:58,968 - INFO - Merged NYAD/NYMO saved to C:\Users\carocraus\PycharmProjects\market-state-api\data\MarketData_NYAD_NYMO.csv
 2025-07-09 11:48:59,274 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 12:37:29,202 - INFO - Connected to SQL Server.
+2025-07-10 12:37:29,271 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 12:37:29,365 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 12:37:29,366 - INFO - Closed SQL connection.
+2025-07-10 12:37:29,489 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 12:37:29,832 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 12:40:01,339 - INFO - Connected to SQL Server.
+2025-07-10 12:40:01,399 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 12:40:01,493 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 12:40:01,494 - INFO - Closed SQL connection.
+2025-07-10 12:40:01,618 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 12:40:01,995 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 12:42:05,392 - INFO - Connected to SQL Server.
+2025-07-10 12:42:05,455 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 12:42:05,556 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 12:42:05,556 - INFO - Closed SQL connection.
+2025-07-10 12:42:05,689 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 12:42:06,056 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 12:46:01,365 - INFO - Connected to SQL Server.
+2025-07-10 12:46:01,426 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 12:46:01,524 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 12:46:01,525 - INFO - Closed SQL connection.
+2025-07-10 12:46:01,656 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 12:46:02,027 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 13:29:41,986 - INFO - Connected to SQL Server.
+2025-07-10 13:29:42,046 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 13:29:42,140 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 13:29:42,140 - INFO - Closed SQL connection.
+2025-07-10 13:29:42,265 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 13:29:42,608 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 13:46:51,492 - INFO - Connected to SQL Server.
+2025-07-10 13:46:51,551 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 13:46:51,645 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 13:46:51,646 - INFO - Closed SQL connection.
+2025-07-10 13:46:51,768 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 13:46:52,108 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 13:57:07,235 - INFO - Connected to SQL Server.
+2025-07-10 13:57:07,294 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 13:57:07,388 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 13:57:07,388 - INFO - Closed SQL connection.
+2025-07-10 13:57:07,511 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 13:57:07,853 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 14:05:53,099 - INFO - Connected to SQL Server.
+2025-07-10 14:05:53,157 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 14:05:53,251 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 14:05:53,251 - INFO - Closed SQL connection.
+2025-07-10 14:05:53,375 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 14:05:53,719 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 14:19:08,910 - INFO - Connected to SQL Server.
+2025-07-10 14:19:08,970 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 14:19:09,065 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 14:19:09,066 - INFO - Closed SQL connection.
+2025-07-10 14:19:09,189 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 14:19:09,542 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 14:20:55,423 - INFO - Connected to SQL Server.
+2025-07-10 14:20:55,483 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 14:20:55,579 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 14:20:55,579 - INFO - Closed SQL connection.
+2025-07-10 14:20:55,705 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 14:20:56,059 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 14:23:19,291 - INFO - Connected to SQL Server.
+2025-07-10 14:23:19,349 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 14:23:19,446 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 14:23:19,446 - INFO - Closed SQL connection.
+2025-07-10 14:23:19,572 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 14:23:19,935 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv
+2025-07-10 14:24:34,031 - INFO - Connected to SQL Server.
+2025-07-10 14:24:34,089 - INFO - Retrieved 9252 rows from SQL Server (from 2005-01-01).
+2025-07-10 14:24:34,186 - INFO - Saved market_breadth_data.csv to C:\Users\tndev\Desktop\market-state-api\data\market_breadth_data.csv
+2025-07-10 14:24:34,186 - INFO - Closed SQL connection.
+2025-07-10 14:24:34,312 - INFO - Merged NYAD/NYMO saved to C:\Users\tndev\Desktop\market-state-api\data\MarketData_NYAD_NYMO.csv
+2025-07-10 14:24:34,670 - INFO - Merged breadth data (from 2005) into MarketStates_Data.csv

@@ -6,5 +6,6 @@ pyodbc
 pandas_market_calendars
 dotenv
 google
+google-api-python-client
 datetime
 pymssql

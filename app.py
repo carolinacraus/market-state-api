@@ -6,6 +6,7 @@ from scripts.logger import get_logger
 from datetime import datetime
 from scripts.sql_upload import upload_market_states # at the top
 import pyodbc
+from scripts.data_retrieval  import daily_data_retrieval
 
 app = Flask(__name__)
 logger = get_logger("flask_app")
@@ -72,6 +73,16 @@ def run_daily_pipeline():
         return jsonify({"status": f"Full daily pipeline executed from {start_date or 'last update'} to {end_date}"}), 200
     except subprocess.CalledProcessError as e:
         logger.error(f"Error running daily pipeline: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/update-local-files", methods=["POST"])
+def update_local_files():
+    try:
+        daily_data_retrieval()
+        logger.info("✅ Local files updated via /update-local-files API route.")
+        return jsonify({"status": "Local file update successful"}), 200
+    except Exception as e:
+        logger.error(f"❌ Local file update failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route("/upload-market-states", methods=["POST"])
