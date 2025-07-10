@@ -5,7 +5,7 @@ import pandas_market_calendars as mcal
 from datetime import datetime
 import argparse
 from dotenv import load_dotenv
-from logger import get_logger
+from scripts.logger import get_logger
 
 # Load environment variables
 load_dotenv()

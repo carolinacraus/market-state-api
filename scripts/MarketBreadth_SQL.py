@@ -2,7 +2,7 @@ import pyodbc
 import pandas as pd
 import os
 from dotenv import load_dotenv
-from logger import get_logger
+from scripts.logger import get_logger
 
 # Load .env
 load_dotenv()

@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
-from logger import get_logger
+from scripts.logger import get_logger
 
 # Initialize logger
 logger = get_logger("indicators")
