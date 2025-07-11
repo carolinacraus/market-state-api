@@ -156,7 +156,7 @@ def test_sql_connection():
 @app.route("/run-classify-upload-system-a", methods=["POST"])
 def run_classify_upload_system_a():
     try:
-        subprocess.run([sys.executable, "scripts/classify_system_a.py"], check=True)
+        subprocess.run([sys.executable, "scripts/scoring_Euclidean.py"], check=True)
         logger.info("System A classification completed.")
         upload_market_states_system_a()
         logger.info("System A upload to SQL completed.")
@@ -168,7 +168,7 @@ def run_classify_upload_system_a():
 @app.route("/run-classify-upload-system-b", methods=["POST"])
 def run_classify_upload_system_b():
     try:
-        subprocess.run([sys.executable, "scripts/classify_system_b.py"], check=True)
+        subprocess.run([sys.executable, "scripts/scoring_Original.py"], check=True)
         logger.info("System B classification completed.")
         upload_market_states_system_b()
         logger.info("System B upload to SQL completed.")
