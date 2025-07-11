@@ -8,7 +8,6 @@ import pyodbc
 from scripts.data_retrieval  import daily_data_retrieval
 from scripts.sql_upload import upload_market_states_system_a
 from scripts.sql_upload import upload_market_states_system_b
-from scripts.scoring_Euclidean import
 app = Flask(__name__)
 logger = get_logger("flask_app")
 
@@ -137,26 +136,52 @@ def test_sql_connection():
 @app.route("/run-classify-upload-system-a", methods=["POST"])
 def run_classify_upload_system_a():
     try:
-        subprocess.run([sys.executable, "scripts/scoring_Euclidean.py"], check=True)
+        result = subprocess.run(
+            [sys.executable, "scripts/scoring_Euclidean.py"],
+            check=True,
+            capture_output=True,
+            text=True
+        )
         logger.info("System A classification completed.")
+        logger.info(result.stdout)
+
         upload_market_states_system_a()
         logger.info("System A upload to SQL completed.")
         return jsonify({"status": "System A classification + upload complete"}), 200
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"System A script failed: {e.stderr}")
+        return jsonify({"error": e.stderr}), 500
+
     except Exception as e:
         logger.error(f"System A pipeline failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
+
 @app.route("/run-classify-upload-system-b", methods=["POST"])
 def run_classify_upload_system_b():
     try:
-        subprocess.run([sys.executable, "scripts/scoring_Original.py"], check=True)
+        result = subprocess.run(
+            [sys.executable, "scripts/scoring_Original.py"],
+            check=True,
+            capture_output=True,
+            text=True
+        )
         logger.info("System B classification completed.")
+        logger.info(result.stdout)
+
         upload_market_states_system_b()
         logger.info("System B upload to SQL completed.")
         return jsonify({"status": "System B classification + upload complete"}), 200
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"System B script failed: {e.stderr}")
+        return jsonify({"error": e.stderr}), 500
+
     except Exception as e:
         logger.error(f"System B pipeline failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/upload-market-states-system-a", methods=["POST"])
 def run_upload_system_a():
