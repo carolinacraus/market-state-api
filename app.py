@@ -8,7 +8,7 @@ import pyodbc
 from scripts.data_retrieval  import daily_data_retrieval
 from scripts.sql_upload import upload_market_states_system_a
 from scripts.sql_upload import upload_market_states_system_b
-
+from scripts.scoring_Euclidean import
 app = Flask(__name__)
 logger = get_logger("flask_app")
 
@@ -79,25 +79,6 @@ def update_local_files():
         logger.error(f"Local file update failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-@app.route("/upload-market-states", methods=["POST"])
-def run_sql_upload():
-    try:
-        # Define path to MarketStates.txt
-        txt_path = os.path.join(os.path.dirname(__file__), "data", "MarketStates.txt")
-
-        # Optional overrides from request
-        list_name = request.json.get("list_name", "Market States 2024")
-        list_description = request.json.get("list_description", "Historical Market States List 2024")
-
-        # Call the modular function
-        upload_market_states(txt_file_path=txt_path, list_name=list_name, list_description=list_description)
-
-        logger.info("Market states uploaded to SQL from API call.")
-        return jsonify({"status": "Upload to SQL successful"}), 200
-
-    except Exception as e:
-        logger.error(f"SQL upload failed: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
 
 @app.route("/download/<filename>", methods=["GET"])
 def download_file(filename):
