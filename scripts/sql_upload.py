@@ -1,56 +1,69 @@
 import os
-import pymssql
 import pandas as pd
+import numpy as np
+import logging
+import sys
+import pymssql
 from dotenv import load_dotenv
 
-def upload_market_states(txt_file_path="data/MarketStates.txt", list_name="Market States 2024", list_description="Historical Market States List 2024 6-19-2025"):
-    load_dotenv()
+# ========== Logger Setup ==========
+def get_logger(name="market_state_system"):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    logs_dir = os.path.join(base_dir, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    log_path = os.path.join(logs_dir, f"{name}.log")
 
-    # Load environment variables
+    logger = logging.getLogger(name)
+    if not logger.handlers:
+        handler = logging.FileHandler(log_path)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.setLevel(logging.INFO)
+        logger.addHandler(handler)
+
+    return logger
+
+logger = get_logger()
+
+# ========== SQL Upload Utilities ==========
+def get_sql_connection():
+    load_dotenv()
     server = os.getenv("SQL_SERVER_MS")
     user = os.getenv("SQL_UID_MS")
     password = os.getenv("SQL_PWD_MS")
     database = os.getenv("SQL_DATABASE_MS")
+    return pymssql.connect(server=server, user=user, password=password, database=database)
 
+def upload_market_states(txt_file_path, list_id, list_name, list_description):
     try:
-        # Connect to SQL Server
-        conn = pymssql.connect(server=server, user=user, password=password, database=database)
+        conn = get_sql_connection()
         cursor = conn.cursor()
 
-        # Step 1: Get or create MarketStates ID
-        cursor.execute("SELECT Id FROM dbo.MarketStates WHERE Name = %s", (list_name,))
+        cursor.execute("SELECT Id FROM dbo.MarketStates WHERE Id = %s", (list_id,))
         row = cursor.fetchone()
 
-        if row:
-            market_state_id = row[0]
-            print(f"Found existing MarketStates entry. Using MarketStateId: {market_state_id}")
-        else:
+        if not row:
             cursor.execute(
-                "INSERT INTO dbo.MarketStates (Name, Description) VALUES (%s, %s)",
-                (list_name, list_description)
+                "INSERT INTO dbo.MarketStates (Id, Name, Description) VALUES (%s, %s, %s)",
+                (list_id, list_name, list_description)
             )
             conn.commit()
-            cursor.execute("SELECT @@IDENTITY")
-            market_state_id = cursor.fetchone()[0]
-            print(f"Inserted new MarketStates entry. Using MarketStateId: {market_state_id}")
+            print(f"Inserted new MarketStates entry. Using MarketStateId: {list_id}")
+        else:
+            print(f"Found existing MarketStates entry. Using MarketStateId: {list_id}")
 
-        # Step 2: Create mapping of MarketState → Direction ID
         market_state_mapping = {}
         cursor.execute("SELECT ID, Category FROM dbo.MarketStateCategories")
         for row in cursor.fetchall():
             market_state_mapping[row[1].strip()] = row[0]
 
-        # Step 3: Read txt file
         df_split = pd.read_csv(txt_file_path, names=["Date", "MarketState"])
-
         df_split["Date"] = pd.to_datetime(df_split["Date"].str.strip(), errors="coerce")
         df_split["MarketState"] = df_split["MarketState"].astype(str).str.strip()
 
-        # Step 4: Check existing dates to skip duplicates
-        cursor.execute("SELECT Date FROM dbo.MarketStateDirection WHERE MarketStateId = %s", (market_state_id,))
+        cursor.execute("SELECT Date FROM dbo.MarketStateDirection WHERE MarketStateId = %s", (list_id,))
         existing_dates = {row[0].date() for row in cursor.fetchall()}
 
-        # Step 5: Insert new rows
         new_rows = 0
         for index, row in df_split.iterrows():
             date = row["Date"]
@@ -60,13 +73,12 @@ def upload_market_states(txt_file_path="data/MarketStates.txt", list_name="Marke
             if pd.notnull(date) and direction_id and date.date() not in existing_dates:
                 cursor.execute(
                     "INSERT INTO dbo.MarketStateDirection (MarketStateId, Date, Direction) VALUES (%s, %s, %s)",
-                    (market_state_id, date.strftime('%Y-%m-%d'), direction_id)
+                    (list_id, date.strftime('%Y-%m-%d'), direction_id)
                 )
                 new_rows += 1
             else:
                 print(f"Skipping row {index}: invalid or duplicate → {date}, {state}")
 
-        # Finalize
         conn.commit()
         print(f"Inserted {new_rows} new row(s) into dbo.MarketStateDirection.")
 
@@ -78,3 +90,20 @@ def upload_market_states(txt_file_path="data/MarketStates.txt", list_name="Marke
             conn.close()
         except:
             pass
+
+# ========== Upload Functions for Each System ==========
+def upload_market_states_system_a():
+    upload_market_states(
+        txt_file_path="data/MarketStates_System_A.txt",
+        list_id=1,
+        list_name="Market States 2005-Present Original Scoring",
+        list_description="Market States List 7-9 Original Scoring"
+    )
+
+def upload_market_states_system_b():
+    upload_market_states(
+        txt_file_path="data/MarketStates_System_B.txt",
+        list_id=2,
+        list_name="Market States 2005-Present Original Scoring",
+        list_description="Market States List 7-9 Original Scoring"
+    )

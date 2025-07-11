@@ -4,9 +4,10 @@ import os
 import sys
 from scripts.logger import get_logger
 from datetime import datetime
-from scripts.sql_upload import upload_market_states # at the top
 import pyodbc
 from scripts.data_retrieval  import daily_data_retrieval
+from scripts.sql_upload import upload_market_states_system_a
+from scripts.sql_upload import upload_market_states_system_b
 
 app = Flask(__name__)
 logger = get_logger("flask_app")
@@ -152,6 +153,49 @@ def test_sql_connection():
         logger.error(f"SQL connection failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
+@app.route("/run-classify-upload-system-a", methods=["POST"])
+def run_classify_upload_system_a():
+    try:
+        subprocess.run([sys.executable, "scripts/classify_system_a.py"], check=True)
+        logger.info("System A classification completed.")
+        upload_market_states_system_a()
+        logger.info("System A upload to SQL completed.")
+        return jsonify({"status": "System A classification + upload complete"}), 200
+    except Exception as e:
+        logger.error(f"System A pipeline failed: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/run-classify-upload-system-b", methods=["POST"])
+def run_classify_upload_system_b():
+    try:
+        subprocess.run([sys.executable, "scripts/classify_system_b.py"], check=True)
+        logger.info("System B classification completed.")
+        upload_market_states_system_b()
+        logger.info("System B upload to SQL completed.")
+        return jsonify({"status": "System B classification + upload complete"}), 200
+    except Exception as e:
+        logger.error(f"System B pipeline failed: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/upload-market-states-system-a", methods=["POST"])
+def run_upload_system_a():
+    try:
+        upload_market_states_system_a()
+        logger.info("System A market states uploaded to SQL from API call.")
+        return jsonify({"status": "System A upload successful"}), 200
+    except Exception as e:
+        logger.error(f"System A SQL upload failed: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/upload-market-states-system-b", methods=["POST"])
+def run_upload_system_b():
+    try:
+        upload_market_states_system_b()
+        logger.info("System B market states uploaded to SQL from API call.")
+        return jsonify({"status": "System B upload successful"}), 200
+    except Exception as e:
+        logger.error(f"System B SQL upload failed: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
 # === Dedicated Download Routes ===
 
 @app.route("/download/market-data", methods=["GET"])
