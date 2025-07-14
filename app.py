@@ -8,6 +8,8 @@ import pyodbc
 from scripts.data_retrieval  import daily_data_retrieval
 from scripts.sql_upload import upload_market_states_system_a
 from scripts.sql_upload import upload_market_states_system_b
+from scripts.plot_chart import generate_state_charts_pdf
+
 app = Flask(__name__)
 logger = get_logger("flask_app")
 
@@ -76,6 +78,14 @@ def update_local_files():
         return jsonify({"status": "Local file update successful"}), 200
     except Exception as e:
         logger.error(f"Local file update failed: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+@app.route("/generate-market-charts", methods=["POST"])
+def generate_market_charts():
+    try:
+        pdf_path = generate_state_charts_pdf()
+        return send_file(pdf_path, as_attachment=True)
+    except Exception as e:
+        logger.error(f"Chart PDF generation failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route("/download/states-chart", methods=["GET"])

@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime
+from PIL import Image
 
 # === Color map ===
 colors = {
@@ -63,7 +64,30 @@ def plot_market_state_chart(txt_file_path, sp500_path, system_name, output_path)
     plt.tight_layout()
 
     plt.savefig(output_path)
+    plt.close()
     print(f"Chart saved to: {output_path}")
+
+def generate_state_charts_pdf():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
+
+    # Define inputs
+    sp500_file = os.path.join(data_dir, "MarketStates_Data.csv")
+
+    txt_a = os.path.join(data_dir, "MarketStates_System_A.txt")
+    chart_a = os.path.join(data_dir, "SP500_Market_States_System_A.png")
+    plot_market_state_chart(txt_a, sp500_file, "System A", chart_a)
+
+    txt_b = os.path.join(data_dir, "MarketStates_System_B.txt")
+    chart_b = os.path.join(data_dir, "SP500_Market_States_System_B.png")
+    plot_market_state_chart(txt_b, sp500_file, "System B", chart_b)
+
+    # Combine into PDF
+    image_list = [Image.open(chart_a).convert("RGB"), Image.open(chart_b).convert("RGB")]
+    pdf_path = os.path.join(data_dir, "SP500_Market_States_Combined.pdf")
+    image_list[0].save(pdf_path, save_all=True, append_images=image_list[1:])
+    print(f"PDF generated: {pdf_path}")
+    return pdf_path
 
 if __name__ == "__main__":
     try:
