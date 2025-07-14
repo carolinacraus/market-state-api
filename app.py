@@ -149,22 +149,29 @@ def test_sql_connection():
 @app.route("/run-classify-upload-system-a", methods=["POST"])
 def run_classify_upload_system_a():
     try:
+        logger.info("🔁 Starting subprocess: scoring_Euclidean.py")
         result = subprocess.run(
             [sys.executable, "scripts/scoring_Euclidean.py"],
             check=True,
             capture_output=True,
             text=True
         )
-        logger.info("System A classification completed.")
+        logger.info("System A classification completed")
         logger.info(result.stdout)
 
         upload_market_states_system_a()
-        logger.info("System A upload to SQL completed.")
+        logger.info("System A upload to SQL completed")
+
         return jsonify({"status": "System A classification + upload complete"}), 200
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"System A script failed: {e.stderr}")
-        return jsonify({"error": e.stderr}), 500
+        stderr = e.stderr or "No stderr output. Possibly a silent crash."
+        logger.error(f"System A subprocess failed:\n{stderr}")
+        return jsonify({"error": stderr}), 500
+
+    except Exception as e:
+        logger.error(f"System A Flask handler failed: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
 
     except Exception as e:
         logger.error(f"System A pipeline failed: {e}", exc_info=True)
