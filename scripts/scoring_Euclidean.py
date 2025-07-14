@@ -124,14 +124,16 @@ if __name__ == "__main__":
     try:
         logger.info(">>> Starting System A classification")
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        input_path = os.path.join(base_dir, "data", "MarketData_with_Indicators.csv")
-        output_path = os.path.join(base_dir, "data", "MarketData_with_States_System_A.csv")
+        data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
+        input_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
+        output_path = os.path.join(data_dir, "MarketData_with_States_System_A.csv")
 
         df = pd.read_csv(input_path, parse_dates=["Date"])
         df_classified = classify_market_states_system_a(df)
         df_classified.to_csv(output_path, index=False)
 
-        append_to_txt_logs_system_a(df_classified, os.path.join(base_dir, "data"), logger)
+        append_to_txt_logs_system_a(df_classified, data_dir, logger)
+
         logger.info(">>> Finished classification")
     except Exception as e:
         logger.error(f"Failed to classify and save markets (System A): {e}", exc_info=True)

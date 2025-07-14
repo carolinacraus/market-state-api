@@ -1,3 +1,19 @@
 2025-07-11 13:47:37,514 - INFO - Scoring and classifying market states (System A)...
 2025-07-11 13:50:40,861 - INFO - Scoring and classifying market states (System A)...
 2025-07-11 13:58:05,545 - INFO - Scoring and classifying market states (System A)...
+2025-07-14 13:35:33,808 - INFO - >>> Starting System A classification
+2025-07-14 13:35:33,809 - ERROR - Failed to classify and save markets (System A): [Errno 2] No such file or directory: 'C:\\Users\\tndev\\Desktop\\market-state-api\\scripts\\data\\MarketData_with_Indicators.csv'
+Traceback (most recent call last):
+  File "C:\Users\tndev\Desktop\market-state-api\scripts\scoring_Euclidean.py", line 130, in <module>
+    df = pd.read_csv(input_path, parse_dates=["Date"])
+  File "C:\Users\tndev\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\parsers\readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\tndev\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\parsers\readers.py", line 620, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\tndev\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\parsers\readers.py", line 1620, in __init__
+    self._engine = self._make_engine(f, self.engine)
+  File "C:\Users\tndev\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\parsers\readers.py", line 1880, in _make_engine
+    self.handles = get_handle(
+  File "C:\Users\tndev\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\common.py", line 873, in get_handle
+    handle = open(
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\tndev\\Desktop\\market-state-api\\scripts\\data\\MarketData_with_Indicators.csv'
