@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import logging
 import sys
+from logger import get_logger
 
 # ========== Logger Setup ==========
 def get_logger(name="market_state_system_a"):
