@@ -78,6 +78,19 @@ def update_local_files():
         logger.error(f"Local file update failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
+@app.route("/download/states-chart", methods=["GET"])
+def download_states_chart():
+    try:
+        chart_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "SP500_Market_States_System_A.png"))
+
+        if not os.path.exists(chart_path):
+            logger.error(f"Chart file not found: {chart_path}")
+            return jsonify({"error": "Market states chart not found"}), 404
+
+        return send_file(chart_path, mimetype='image/png', as_attachment=True)
+    except Exception as e:
+        logger.error(f"Error sending chart image: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/download/<filename>", methods=["GET"])
 def download_file(filename):

@@ -1,5 +1,3 @@
-# scripts/historical_run.py
-
 import os
 import pandas as pd
 from datetime import datetime, timedelta
@@ -8,29 +6,28 @@ from dotenv import load_dotenv
 from DataRetrieval_FMP import fetch_all_tickers, get_valid_trading_days, TICKER_MAP
 from MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data, merge_with_market_data
 from calculate_indicators import calculate_all_indicators
-from classify_markets import classify_market_states, append_to_txt_logs
-from sql_upload import upload_market_states
+from scoring_Euclidean import classify_market_states_system_a, append_to_txt_logs_system_a
+from scoring_Original import classify_market_states_system_b, append_to_txt_logs_system_b
+from sql_upload import upload_market_states_system_a, upload_market_states_system_b
 from logger import get_logger
 
 def run_historical_pipeline():
     logger = get_logger("historical_run")
     load_dotenv()
 
-    # base_dir is the root of the project (one level above 'scripts/')
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(base_dir, "data")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
 
     market_path = os.path.join(data_dir, "MarketStates_Data.csv")
     indicator_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
-    state_output_path = os.path.join(data_dir, "MarketData_with_States.csv")
-    states_txt = os.path.join(data_dir, "MarketStates.txt")
-    diag_txt = os.path.join(data_dir, "MarketStates_Diagnostics.txt")
+
+    state_output_a = os.path.join(data_dir, "MarketData_with_States_System_A.csv")
+    state_output_b = os.path.join(data_dir, "MarketData_with_States_System_B.csv")
 
     start_date = "2005-01-01"
     end_date = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
     logger.info(f"Historical run from {start_date} to {end_date}")
 
-    # Step 1: FMP Market Data
     try:
         df_market = fetch_all_tickers(list(TICKER_MAP.keys()), start_date, end_date)
         valid_days = get_valid_trading_days(start_date, end_date)
@@ -42,7 +39,6 @@ def run_historical_pipeline():
         logger.error(f"[FMP] Failed to retrieve historical market data: {e}")
         return
 
-    # Step 2: Breadth Merge
     try:
         gather_market_breadth_data()
         reformat_breadth_data()
@@ -52,7 +48,6 @@ def run_historical_pipeline():
         logger.error(f"[Breadth] Merge failed: {e}")
         return
 
-    # Step 3: Indicator Calculation
     try:
         calculate_all_indicators(market_path, indicator_path)
         logger.info("Technical indicators calculated")
@@ -60,27 +55,32 @@ def run_historical_pipeline():
         logger.error(f"[Indicators] Failed: {e}")
         return
 
-    # Step 4: Classification
     try:
         df = pd.read_csv(indicator_path, parse_dates=["Date"])
-        df_classified = classify_market_states(df)
-        df_classified.to_csv(state_output_path, index=False)
-        append_to_txt_logs(df_classified, data_dir, logger)
-        logger.info("Market states classified and written to all outputs")
+
+        df_classified_a = classify_market_states_system_a(df)
+        df_classified_a.to_csv(state_output_a, index=False)
+        append_to_txt_logs_system_a(df_classified_a, data_dir, logger)
+        logger.info("System A: Market states classified and saved")
+
+        df_classified_b = classify_market_states_system_b(df)
+        df_classified_b.to_csv(state_output_b, index=False)
+        append_to_txt_logs_system_b(df_classified_b, data_dir, logger)
+        logger.info("System B: Market states classified and saved")
+
     except Exception as e:
         logger.error(f"[Classification] Failed: {e}")
         return
 
-    # Step 5: SQL Upload
     try:
-        logger.info("Uploading historical market states to SQL...")
-        upload_market_states(
-            txt_file_path=states_txt,
-            list_name="Market States 2005-Present Euclidean Scoring",
-            list_description="Market States List 7-9 Euclidean Scoring"
-        )
+        logger.info("Uploading System A market states to SQL...")
+        upload_market_states_system_a()
+        logger.info("System A market states uploaded")
 
-        logger.info("Market states uploaded to SQL successfully")
+        logger.info("Uploading System B market states to SQL...")
+        upload_market_states_system_b()
+        logger.info("System B market states uploaded")
+
     except Exception as e:
         logger.error(f"[SQL Upload] Failed: {e}")
         return
