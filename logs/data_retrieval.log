@@ -1,0 +1,60 @@
+2025-07-10 12:37:23,184 - INFO - Running historical data retrieval...
+2025-07-10 12:37:29,101 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 12:37:29,833 - INFO - Market breadth merged successfully
+2025-07-10 12:37:49,375 - INFO - Technical indicators calculated
+2025-07-10 12:37:49,375 - ERROR - [Historical] Data retrieval failed: [Errno 2] No such file or directory: 'service_account.json'
+2025-07-10 12:39:56,232 - INFO - Running historical data retrieval...
+2025-07-10 12:40:01,280 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 12:40:01,996 - INFO - Market breadth merged successfully
+2025-07-10 12:40:21,368 - INFO - Technical indicators calculated
+2025-07-10 12:40:21,368 - ERROR - [Historical] Data retrieval failed: [Errno 2] No such file or directory: 'service_account.json'
+2025-07-10 12:41:59,190 - INFO - Running historical data retrieval...
+2025-07-10 12:42:05,331 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 12:42:06,057 - INFO - Market breadth merged successfully
+2025-07-10 12:42:25,228 - INFO - Technical indicators calculated
+2025-07-10 12:42:25,228 - ERROR - [Historical] Data retrieval failed: [Errno 22] Invalid argument: 'os.path.join(base_dir, "service_account.json")'
+2025-07-10 12:45:56,148 - INFO - Running historical data retrieval...
+2025-07-10 12:46:01,306 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 12:46:02,028 - INFO - Market breadth merged successfully
+2025-07-10 12:46:21,489 - INFO - Technical indicators calculated
+2025-07-10 12:46:21,755 - ERROR - [Historical] Data retrieval failed: <HttpError 404 when requesting https://www.googleapis.com/drive/v3/files?q=%27None%27+in+parents+and+name+%3D+%27MarketStates_Data.csv%27+and+trashed+%3D+false&spaces=drive&fields=files%28id%2C+name%29&alt=json returned "File not found: .". Details: "[{'message': 'File not found: .', 'domain': 'global', 'reason': 'notFound', 'location': 'fileId', 'locationType': 'parameter'}]">
+2025-07-10 13:29:36,219 - INFO - Running historical data retrieval...
+2025-07-10 13:29:41,927 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 13:29:42,609 - INFO - Market breadth merged successfully
+2025-07-10 13:30:01,713 - INFO - Technical indicators calculated
+2025-07-10 13:30:02,805 - ERROR - [Historical] Data retrieval failed: <HttpError 403 when requesting None returned "Service Accounts do not have storage quota. Leverage shared drives (https://developers.google.com/workspace/drive/api/guides/about-shareddrives), or use OAuth delegation (http://support.google.com/a/answer/7281227) instead.". Details: "[{'message': 'Service Accounts do not have storage quota. Leverage shared drives (https://developers.google.com/workspace/drive/api/guides/about-shareddrives), or use OAuth delegation (http://support.google.com/a/answer/7281227) instead.', 'domain': 'usageLimits', 'reason': 'storageQuotaExceeded'}]">
+2025-07-10 13:46:46,417 - INFO - Running historical data retrieval...
+2025-07-10 13:46:51,432 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 13:46:52,109 - INFO - Market breadth merged successfully
+2025-07-10 13:47:11,618 - INFO - Technical indicators calculated
+2025-07-10 13:47:12,908 - ERROR - [Historical] Data retrieval failed: <HttpError 403 when requesting None returned "Service Accounts do not have storage quota. Leverage shared drives (https://developers.google.com/workspace/drive/api/guides/about-shareddrives), or use OAuth delegation (http://support.google.com/a/answer/7281227) instead.". Details: "[{'message': 'Service Accounts do not have storage quota. Leverage shared drives (https://developers.google.com/workspace/drive/api/guides/about-shareddrives), or use OAuth delegation (http://support.google.com/a/answer/7281227) instead.', 'domain': 'usageLimits', 'reason': 'storageQuotaExceeded'}]">
+2025-07-10 13:57:02,155 - INFO - Running historical data retrieval...
+2025-07-10 13:57:07,176 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 13:57:07,854 - INFO - Market breadth merged successfully
+2025-07-10 13:57:26,900 - INFO - Technical indicators calculated
+2025-07-10 13:57:27,922 - ERROR - [Historical] Data retrieval failed: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\tndev\\Desktop\\market-state-api\\data\\MarketStates_Data.csv.tmp'
+2025-07-10 14:05:47,935 - INFO - Running historical data retrieval...
+2025-07-10 14:05:53,040 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 14:05:53,720 - INFO - Market breadth merged successfully
+2025-07-10 14:06:12,804 - INFO - Technical indicators calculated
+2025-07-10 14:06:14,000 - ERROR - [Historical] Data retrieval failed: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\tndev\\Desktop\\market-state-api\\data\\MarketStates_Data.csv.tmp'
+2025-07-10 14:19:03,801 - INFO - Running historical data retrieval...
+2025-07-10 14:19:08,851 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 14:19:09,543 - INFO - Market breadth merged successfully
+2025-07-10 14:19:28,657 - INFO - Technical indicators calculated
+2025-07-10 14:19:29,686 - ERROR - [Historical] Data retrieval failed: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\tndev\\Desktop\\market-state-api\\data\\MarketStates_Data.csv.tmp'
+2025-07-10 14:20:50,261 - INFO - Running historical data retrieval...
+2025-07-10 14:20:55,365 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 14:20:56,060 - INFO - Market breadth merged successfully
+2025-07-10 14:21:15,211 - INFO - Technical indicators calculated
+2025-07-10 14:21:16,263 - ERROR - [Historical] Data retrieval failed: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\tndev\\Desktop\\market-state-api\\data\\MarketStates_Data.csv.tmp'
+2025-07-10 14:23:13,502 - INFO - Running historical data retrieval...
+2025-07-10 14:23:19,232 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 14:23:19,936 - INFO - Market breadth merged successfully
+2025-07-10 14:23:38,882 - INFO - Technical indicators calculated
+2025-07-10 14:23:39,882 - ERROR - [Historical] Data retrieval failed: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\tndev\\Desktop\\market-state-api\\data\\MarketStates_Data.csv.tmp'
+2025-07-10 14:24:29,063 - INFO - Running historical data retrieval...
+2025-07-10 14:24:33,973 - INFO - Saved 5161 rows to MarketStates_Data.csv
+2025-07-10 14:24:34,671 - INFO - Market breadth merged successfully
+2025-07-10 14:24:53,825 - INFO - Technical indicators calculated
+2025-07-10 14:24:54,889 - ERROR - [Historical] Data retrieval failed: <HttpError 403 when requesting None returned "Service Accounts do not have storage quota. Leverage shared drives (https://developers.google.com/workspace/drive/api/guides/about-shareddrives), or use OAuth delegation (http://support.google.com/a/answer/7281227) instead.". Details: "[{'message': 'Service Accounts do not have storage quota. Leverage shared drives (https://developers.google.com/workspace/drive/api/guides/about-shareddrives), or use OAuth delegation (http://support.google.com/a/answer/7281227) instead.', 'domain': 'usageLimits', 'reason': 'storageQuotaExceeded'}]">

@@ -1,0 +1,56 @@
+2025-07-11 13:35:36,467 - INFO - Historical run from 2005-01-01 to 2025-07-10
+2025-07-11 13:35:41,571 - INFO - Saved 5162 rows to MarketStates_Data.csv
+2025-07-11 13:35:42,315 - INFO - Market breadth merged successfully
+2025-07-11 13:36:02,670 - INFO - Technical indicators calculated
+2025-07-11 13:36:06,213 - INFO - Appending market state logs to txt files...
+2025-07-11 13:36:06,858 - INFO - Appended 5162 new rows to MarketStates.txt and MarketStates_Diagnostics.txt
+2025-07-11 13:36:06,863 - INFO - Market states classified and written to all outputs
+2025-07-11 13:36:06,863 - INFO - Uploading historical market states to SQL...
+2025-07-11 13:36:06,863 - ERROR - [SQL Upload] Failed: upload_market_states() missing 1 required positional argument: 'list_id'
+2025-07-11 13:47:11,168 - INFO - Historical run from 2005-01-01 to 2025-07-10
+2025-07-11 13:47:16,143 - INFO - Saved 5162 rows to MarketStates_Data.csv
+2025-07-11 13:47:16,827 - INFO - Market breadth merged successfully
+2025-07-11 13:47:37,375 - INFO - Technical indicators calculated
+2025-07-11 13:47:40,880 - INFO - Appending System A logs to txt files...
+2025-07-11 13:47:41,519 - INFO - Appended 5162 new rows to System A txt logs.
+2025-07-11 13:47:41,524 - INFO - System A: Market states classified and saved
+2025-07-11 13:47:43,081 - INFO - Appending System B logs to txt files...
+2025-07-11 13:47:43,722 - INFO - Appended 5162 new rows to System B txt logs.
+2025-07-11 13:47:43,727 - INFO - System B: Market states classified and saved
+2025-07-11 13:47:43,727 - INFO - Uploading System A market states to SQL...
+2025-07-11 13:47:43,781 - INFO - System A market states uploaded
+2025-07-11 13:47:43,782 - INFO - Uploading System B market states to SQL...
+2025-07-11 13:47:43,791 - INFO - System B market states uploaded
+2025-07-11 13:47:43,791 - INFO - Historical pipeline completed successfully
+2025-07-11 13:49:16,977 - INFO - Historical run from 2005-01-01 to 2025-07-10
+2025-07-11 13:49:21,883 - ERROR - [FMP] Failed to retrieve historical market data: Cannot save file into a non-existent directory: 'C:\Users\tndev\Desktop\market-state-api\scripts\data'
+2025-07-11 13:50:15,945 - INFO - Historical run from 2005-01-01 to 2025-07-10
+2025-07-11 13:50:20,910 - INFO - Saved 5162 rows to MarketStates_Data.csv
+2025-07-11 13:50:21,598 - INFO - Market breadth merged successfully
+2025-07-11 13:50:40,720 - INFO - Technical indicators calculated
+2025-07-11 13:50:44,210 - INFO - Appending System A logs to txt files...
+2025-07-11 13:50:44,734 - INFO - Appended 0 new rows to System A txt logs.
+2025-07-11 13:50:44,740 - INFO - System A: Market states classified and saved
+2025-07-11 13:50:46,285 - INFO - Appending System B logs to txt files...
+2025-07-11 13:50:46,805 - INFO - Appended 0 new rows to System B txt logs.
+2025-07-11 13:50:46,810 - INFO - System B: Market states classified and saved
+2025-07-11 13:50:46,811 - INFO - Uploading System A market states to SQL...
+2025-07-11 13:50:46,828 - INFO - System A market states uploaded
+2025-07-11 13:50:46,828 - INFO - Uploading System B market states to SQL...
+2025-07-11 13:50:46,835 - INFO - System B market states uploaded
+2025-07-11 13:50:46,835 - INFO - Historical pipeline completed successfully
+2025-07-11 13:57:39,521 - INFO - Historical run from 2005-01-01 to 2025-07-10
+2025-07-11 13:57:44,508 - INFO - Saved 5162 rows to MarketStates_Data.csv
+2025-07-11 13:57:45,193 - INFO - Market breadth merged successfully
+2025-07-11 13:58:05,405 - INFO - Technical indicators calculated
+2025-07-11 13:58:08,911 - INFO - Appending System A logs to txt files...
+2025-07-11 13:58:09,453 - INFO - Appended 0 new rows to System A txt logs.
+2025-07-11 13:58:09,458 - INFO - System A: Market states classified and saved
+2025-07-11 13:58:11,015 - INFO - Appending System B logs to txt files...
+2025-07-11 13:58:11,557 - INFO - Appended 0 new rows to System B txt logs.
+2025-07-11 13:58:11,562 - INFO - System B: Market states classified and saved
+2025-07-11 13:58:11,563 - INFO - Uploading System A market states to SQL...
+2025-07-11 13:58:12,131 - INFO - System A market states uploaded
+2025-07-11 13:58:12,131 - INFO - Uploading System B market states to SQL...
+2025-07-11 13:58:13,881 - INFO - System B market states uploaded
+2025-07-11 13:58:13,882 - INFO - Historical pipeline completed successfully
