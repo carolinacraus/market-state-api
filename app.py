@@ -77,16 +77,25 @@ def upload_market_state_sql():
         os.environ["LIST_NAME"] = request.json.get("list_name")
         os.environ["LIST_DESCRIPTION"] = request.json.get("list_description")
 
-        subprocess.run(
+        result = subprocess.run(
             [sys.executable, "scripts/sql_upload.py"],
             check=True,
             capture_output=True,
             text=True
         )
-        return jsonify({"status": "✅ SQL upload complete"}), 200
+
+        logger.info(result.stdout)
+        return jsonify({"status": "SQL upload complete", "stdout": result.stdout}), 200
 
     except subprocess.CalledProcessError as e:
-        return jsonify({"error": e.stderr or "Subprocess failed."}), 500
+        stderr = e.stderr or "Subprocess failed silently"
+        logger.error(f"SQL uploader failed:\n{stderr}")
+        return jsonify({"error": stderr}), 500
+
+    except Exception as e:
+        logger.error(f"Upload route failed: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route("/run-classify-system", methods=["POST"])
 def run_classify_system():
@@ -97,9 +106,9 @@ def run_classify_system():
 
         os.environ["SYSTEM_NAME"] = system_name
 
-        if system_name.lower() == "euclidean":
+        if system_name.lower() == "Euclidean":
             script_to_run = "scripts/scoring_Euclidean.py"
-        elif system_name.lower() == "original":
+        elif system_name.lower() == "Original":
             script_to_run = "scripts/scoring_Original.py"
         else:
             return jsonify({"error": f"Unsupported system name: {system_name}"}), 400
@@ -213,83 +222,83 @@ def test_sql_connection():
         logger.error(f"SQL connection failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-@app.route("/run-classify-upload-system-a", methods=["POST"])
-def run_classify_upload_system_a():
-    try:
-        logger.info("🔁 Starting subprocess: scoring_Euclidean.py")
-        result = subprocess.run(
-            [sys.executable, "scripts/scoring_Euclidean.py"],
-            check=True,
-            capture_output=True,
-            text=True
-        )
-        logger.info("System A classification completed")
-        logger.info(result.stdout)
-
-        upload_market_states_system_a()
-        logger.info("System A upload to SQL completed")
-
-        return jsonify({"status": "System A classification + upload complete"}), 200
-
-    except subprocess.CalledProcessError as e:
-        stderr = e.stderr or "No stderr output. Possibly a silent crash."
-        logger.error(f"System A subprocess failed:\n{stderr}")
-        return jsonify({"error": stderr}), 500
-
-    except Exception as e:
-        logger.error(f"System A Flask handler failed: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-    except Exception as e:
-        logger.error(f"System A pipeline failed: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/run-classify-upload-system-b", methods=["POST"])
-def run_classify_upload_system_b():
-    try:
-        result = subprocess.run(
-            [sys.executable, "scripts/scoring_Original.py"],
-            check=True,
-            capture_output=True,
-            text=True
-        )
-        logger.info("System B classification completed.")
-        logger.info(result.stdout)
-
-        upload_market_states_system_b()
-        logger.info("System B upload to SQL completed.")
-        return jsonify({"status": "System B classification + upload complete"}), 200
-
-    except subprocess.CalledProcessError as e:
-        logger.error(f"System B script failed: {e.stderr}")
-        return jsonify({"error": e.stderr}), 500
-
-    except Exception as e:
-        logger.error(f"System B pipeline failed: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/upload-market-states-system-a", methods=["POST"])
-def run_upload_system_a():
-    try:
-        upload_market_states_system_a()
-        logger.info("System A market states uploaded to SQL from API call.")
-        return jsonify({"status": "System A upload successful"}), 200
-    except Exception as e:
-        logger.error(f"System A SQL upload failed: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/upload-market-states-system-b", methods=["POST"])
-def run_upload_system_b():
-    try:
-        upload_market_states_system_b()
-        logger.info("System B market states uploaded to SQL from API call.")
-        return jsonify({"status": "System B upload successful"}), 200
-    except Exception as e:
-        logger.error(f"System B SQL upload failed: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-# === Dedicated Download Routes ===
+# @app.route("/run-classify-upload-system-a", methods=["POST"])
+# def run_classify_upload_system_a():
+#     try:
+#         logger.info("🔁 Starting subprocess: scoring_Euclidean.py")
+#         result = subprocess.run(
+#             [sys.executable, "scripts/scoring_Euclidean.py"],
+#             check=True,
+#             capture_output=True,
+#             text=True
+#         )
+#         logger.info("System A classification completed")
+#         logger.info(result.stdout)
+#
+#         upload_market_states_system_a()
+#         logger.info("System A upload to SQL completed")
+#
+#         return jsonify({"status": "System A classification + upload complete"}), 200
+#
+#     except subprocess.CalledProcessError as e:
+#         stderr = e.stderr or "No stderr output. Possibly a silent crash."
+#         logger.error(f"System A subprocess failed:\n{stderr}")
+#         return jsonify({"error": stderr}), 500
+#
+#     except Exception as e:
+#         logger.error(f"System A Flask handler failed: {e}", exc_info=True)
+#         return jsonify({"error": str(e)}), 500
+#
+#     except Exception as e:
+#         logger.error(f"System A pipeline failed: {e}", exc_info=True)
+#         return jsonify({"error": str(e)}), 500
+#
+#
+# @app.route("/run-classify-upload-system-b", methods=["POST"])
+# def run_classify_upload_system_b():
+#     try:
+#         result = subprocess.run(
+#             [sys.executable, "scripts/scoring_Original.py"],
+#             check=True,
+#             capture_output=True,
+#             text=True
+#         )
+#         logger.info("System B classification completed.")
+#         logger.info(result.stdout)
+#
+#         upload_market_states_system_b()
+#         logger.info("System B upload to SQL completed.")
+#         return jsonify({"status": "System B classification + upload complete"}), 200
+#
+#     except subprocess.CalledProcessError as e:
+#         logger.error(f"System B script failed: {e.stderr}")
+#         return jsonify({"error": e.stderr}), 500
+#
+#     except Exception as e:
+#         logger.error(f"System B pipeline failed: {e}", exc_info=True)
+#         return jsonify({"error": str(e)}), 500
+#
+#
+# @app.route("/upload-market-states-system-a", methods=["POST"])
+# def run_upload_system_a():
+#     try:
+#         upload_market_states_system_a()
+#         logger.info("System A market states uploaded to SQL from API call.")
+#         return jsonify({"status": "System A upload successful"}), 200
+#     except Exception as e:
+#         logger.error(f"System A SQL upload failed: {e}", exc_info=True)
+#         return jsonify({"error": str(e)}), 500
+#
+# @app.route("/upload-market-states-system-b", methods=["POST"])
+# def run_upload_system_b():
+#     try:
+#         upload_market_states_system_b()
+#         logger.info("System B market states uploaded to SQL from API call.")
+#         return jsonify({"status": "System B upload successful"}), 200
+#     except Exception as e:
+#         logger.error(f"System B SQL upload failed: {e}", exc_info=True)
+#         return jsonify({"error": str(e)}), 500
+# # === Dedicated Download Routes ===
 
 @app.route("/download/market-data", methods=["GET"])
 def download_market_data():

@@ -116,8 +116,13 @@ def upload_market_states():
         conn.commit()
         print(f"Inserted {new_rows} new row(s) into dbo.MarketStateDirection.")
 
+
     except Exception as e:
-        print(f"ERROR: {e}")
+
+        logger.error(f"ERROR: {e}", exc_info=True)
+
+        raise  # <-- This raises the error to be caught by __main__ above
+
 
     finally:
         try:
@@ -128,4 +133,8 @@ def upload_market_states():
 
 # ========== Entry ==========
 if __name__ == "__main__":
-    upload_market_states()
+    try:
+        upload_market_states()
+    except Exception as e:
+        logger.error(f"Fatal error during SQL upload: {e}", exc_info=True)
+        sys.exit(1)  # <-- Non-zero exit code tells subprocess it failed
