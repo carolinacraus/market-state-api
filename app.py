@@ -18,7 +18,7 @@ def index():
     logger.info("Health check hit.")
     return "Market State AI Microservice is running!"
 
-#comment
+#commenttest
 @app.route("/fetch-market-data", methods=["POST"])
 def fetch_market_data():
     try:
