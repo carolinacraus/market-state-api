@@ -6,8 +6,14 @@ import sys
 import pymssql
 from dotenv import load_dotenv
 
+# ========== Configurable System ==========
+system_name = os.getenv("SYSTEM_NAME", "A")
+list_id = int(os.getenv("LIST_ID", 1))
+list_name = os.getenv("LIST_NAME", "Market States 2005-Present Original Scoring")
+list_description = os.getenv("LIST_DESCRIPTION", "Market States List 7-9 Original Scoring")
+
 # ========== Logger Setup ==========
-def get_logger(name="market_state_system"):
+def get_logger(name=f"upload_sql_system_{system_name.lower()}"):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     logs_dir = os.path.join(base_dir, "logs")
     os.makedirs(logs_dir, exist_ok=True)
@@ -35,8 +41,10 @@ def get_sql_connection():
     return pymssql.connect(server=server, user=user, password=password, database=database)
 
 # ========== Core Upload Function ==========
-def upload_market_states(txt_file_relpath, list_id, list_name, list_description):
-    # build absolute path to txt file
+def upload_market_states():
+    txt_file_relpath = f"data/MarketStates_System_{system_name}.txt"
+
+    # Build absolute path
     script_dir   = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     txt_file_path = os.path.join(project_root, txt_file_relpath)
@@ -46,15 +54,12 @@ def upload_market_states(txt_file_relpath, list_id, list_name, list_description)
         return
 
     try:
-        conn   = get_sql_connection()
+        conn = get_sql_connection()
         cursor = conn.cursor()
 
-        # --- 1) Ensure MarketStates entry exists (with explicit Id) ---
+        # Ensure MarketStates entry exists
         cursor.execute("SELECT Id FROM dbo.MarketStates WHERE Id = %s", (list_id,))
-        existing = cursor.fetchone()
-
-        if not existing:
-            # enable identity insert so we can set Id explicitly
+        if not cursor.fetchone():
             cursor.execute("SET IDENTITY_INSERT dbo.MarketStates ON;")
             cursor.execute(
                 "INSERT INTO dbo.MarketStates (Id, Name, Description) VALUES (%s, %s, %s)",
@@ -62,32 +67,30 @@ def upload_market_states(txt_file_relpath, list_id, list_name, list_description)
             )
             cursor.execute("SET IDENTITY_INSERT dbo.MarketStates OFF;")
             conn.commit()
-            print(f"Inserted new MarketStates entry. Using MarketStateId: {list_id}")
+            print(f"Inserted new MarketStates entry: {list_id}")
         else:
-            print(f"Found existing MarketStates entry. Using MarketStateId: {list_id}")
+            print(f"MarketStates entry {list_id} already exists")
 
-        # --- 2) Load category→ID mapping ---
+        # Load mapping
         market_state_mapping = {}
         cursor.execute("SELECT ID, Category FROM dbo.MarketStateCategories")
         for cat_id, cat_name in cursor.fetchall():
             market_state_mapping[cat_name.strip()] = cat_id
 
-        # --- 3) Read and parse your text file ---
+        # Read txt file
         df = pd.read_csv(txt_file_path, names=["Date", "MarketState"])
-        df["Date"]        = pd.to_datetime(df["Date"].str.strip(), errors="coerce")
+        df["Date"] = pd.to_datetime(df["Date"].str.strip(), errors="coerce")
         df["MarketState"] = df["MarketState"].astype(str).str.strip()
 
-        # --- 4) Fetch existing dates for this list_id ---
         cursor.execute(
             "SELECT [Date] FROM dbo.MarketStateDirection WHERE MarketStateId = %s",
             (list_id,)
         )
         existing_dates = {r[0].date() for r in cursor.fetchall()}
 
-        # --- 5) Insert new rows only for dates not already present ---
         new_rows = 0
         for idx, row in df.iterrows():
-            dt    = row["Date"]
+            dt = row["Date"]
             state = row["MarketState"]
             direction_id = market_state_mapping.get(state)
 
@@ -96,8 +99,7 @@ def upload_market_states(txt_file_relpath, list_id, list_name, list_description)
                 continue
 
             if dt.date() in existing_dates:
-                # entire date already uploaded
-                print(f"Date {dt.date()} already exists, skipping row {idx}")
+                print(f"Date {dt.date()} already exists, skipping")
                 continue
 
             cursor.execute(
@@ -124,25 +126,6 @@ def upload_market_states(txt_file_relpath, list_id, list_name, list_description)
         except:
             pass
 
-# ========== Specific Uploaders ==========
-def upload_market_states_system_a():
-    upload_market_states(
-        txt_file_relpath="data/MarketStates_System_A.txt",
-        list_id=1,
-        list_name="Market States 2005-Present Original Scoring",
-        list_description="Market States List 7-9 Original Scoring"
-    )
-
-def upload_market_states_system_b():
-    upload_market_states(
-        txt_file_relpath="data/MarketStates_System_B.txt",
-        list_id=2,
-        list_name="Market States 2005-Present Alternative Scoring",
-        list_description="Market States List 7-9 Alternative Scoring"
-    )
-
-# ========== Entry Point ==========
+# ========== Entry ==========
 if __name__ == "__main__":
-    # Choose which system to upload (A or B) as needed:
-    upload_market_states_system_a()
-    upload_market_states_system_b()
+    upload_market_states()

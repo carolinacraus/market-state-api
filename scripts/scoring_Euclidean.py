@@ -137,6 +137,7 @@ if __name__ == "__main__":
         df_classified.to_csv(output_path, index=False)
         append_to_txt_logs_system_a(df_classified, data_dir, logger)
 
+        # Upload CSV
         upload_to_github(
             file_path=output_path,
             repo="carolinacraus/market-state-api",
@@ -144,11 +145,22 @@ if __name__ == "__main__":
             commit_message=f"Daily update: market states system {system_name}"
         )
 
+        # Upload MarketStates txt
+        txt_path = os.path.join(data_dir, f"MarketStates_System_{system_name}.txt")
         upload_to_github(
-            file_path=os.path.join(data_dir, f"MarketStates_System_{system_name}.txt"),
+            file_path=txt_path,
             repo="carolinacraus/market-state-api",
             path_in_repo=f"data/MarketStates_System_{system_name}.txt",
             commit_message=f"Daily update: market states log system {system_name}"
+        )
+
+        # Upload Diagnostics txt ✅
+        diag_path = os.path.join(data_dir, f"MarketStates_Diagnostics_System_{system_name}.txt")
+        upload_to_github(
+            file_path=diag_path,
+            repo="carolinacraus/market-state-api",
+            path_in_repo=f"data/MarketStates_Diagnostics_System_{system_name}.txt",
+            commit_message=f"Daily update: diagnostics system {system_name}"
         )
 
         logger.info(f">>> Finished classification for system {system_name}")

@@ -6,8 +6,6 @@ from scripts.logger import get_logger
 from datetime import datetime
 import pyodbc
 from scripts.data_retrieval  import daily_data_retrieval
-from scripts.sql_upload import upload_market_states_system_a
-from scripts.sql_upload import upload_market_states_system_b
 from scripts.plot_chart import generate_state_charts_pdf
 
 app = Flask(__name__)
@@ -69,6 +67,64 @@ def run_daily_pipeline():
         return jsonify({"status": "Daily pipeline completed successfully"}), 200
     except Exception as e:
         logger.error(f"Daily pipeline failed: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/upload-market-state-sql", methods=["POST"])
+def upload_market_state_sql():
+    try:
+        os.environ["SYSTEM_NAME"] = request.json.get("system_name")
+        os.environ["LIST_ID"] = str(request.json.get("list_id"))
+        os.environ["LIST_NAME"] = request.json.get("list_name")
+        os.environ["LIST_DESCRIPTION"] = request.json.get("list_description")
+
+        subprocess.run(
+            [sys.executable, "scripts/sql_uploader.py"],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        return jsonify({"status": "✅ SQL upload complete"}), 200
+
+    except subprocess.CalledProcessError as e:
+        return jsonify({"error": e.stderr or "Subprocess failed."}), 500
+
+@app.route("/run-classify-system", methods=["POST"])
+def run_classify_system():
+    try:
+        system_name = request.json.get("system_name")
+        if not system_name:
+            return jsonify({"error": "Missing 'system_name' in request body"}), 400
+
+        os.environ["SYSTEM_NAME"] = system_name
+
+        if system_name.lower() == "euclidean":
+            script_to_run = "scripts/scoring_Euclidean.py"
+        elif system_name.lower() == "original":
+            script_to_run = "scripts/scoring_Original.py"
+        else:
+            return jsonify({"error": f"Unsupported system name: {system_name}"}), 400
+
+        logger.info(f"Running classification script: {script_to_run}")
+        result = subprocess.run(
+            [sys.executable, script_to_run],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        logger.info(result.stdout)
+
+        return jsonify({
+            "status": f"{system_name} classification complete",
+            "stdout": result.stdout
+        }), 200
+
+    except subprocess.CalledProcessError as e:
+        stderr = e.stderr or "No stderr output"
+        logger.error(f"Classification subprocess failed:\n{stderr}")
+        return jsonify({"error": stderr}), 500
+
+    except Exception as e:
+        logger.error(f"Classification route failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route("/update-local-files", methods=["POST"])
