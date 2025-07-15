@@ -7,7 +7,7 @@ from logger import get_logger
 logger = get_logger("market_state_classifier")
 
 # Define paths
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 data_path = os.path.join(base_dir, 'data', 'MarketStates_Data.csv')
 output_csv = os.path.join(base_dir, 'data', 'MarketData_with_States.csv')
 states_txt = os.path.join(base_dir, 'data', 'MarketStates.txt')

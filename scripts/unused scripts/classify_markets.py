@@ -7,7 +7,7 @@ import sys
 # ========== Logger Setup ==========
 def get_logger(name="market_state_classifier"):
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    logs_dir = os.path.join(base_dir, "logs")
+    logs_dir = os.path.join(base_dir, "../logs")
     os.makedirs(logs_dir, exist_ok=True)
     log_path = os.path.join(logs_dir, f"{name}.log")
 

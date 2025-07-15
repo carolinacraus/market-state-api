@@ -4,9 +4,13 @@ import numpy as np
 import logging
 import sys
 from logger import get_logger
+from github_upload import upload_to_github  # ✅ New import
+
+# ========== Configurable System Name ==========
+system_name = "Euclidean"  # 🔁 Set this to customize file naming
 
 # ========== Logger Setup ==========
-def get_logger(name="market_state_system_a"):
+def get_logger(name=f"market_state_system_{system_name.lower()}"):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     logs_dir = os.path.join(base_dir, "logs")
     os.makedirs(logs_dir, exist_ok=True)
@@ -71,12 +75,12 @@ def compute_scores_system_a(row):
 
 # ========== Classification Function ==========
 def classify_market_states_system_a(df: pd.DataFrame) -> pd.DataFrame:
-    logger.info("Scoring and classifying market states (System A)...")
+    logger.info(f"Scoring and classifying market states (System {system_name})...")
     df = df.copy()
-    df[['TrendScore_A', 'MomentumScore_A', 'VolatilityScore_A']] = df.apply(compute_scores_system_a, axis=1)
+    df[[f"TrendScore_{system_name}", f"MomentumScore_{system_name}", f"VolatilityScore_{system_name}"]] = df.apply(compute_scores_system_a, axis=1)
 
     def classify_row(row):
-        vector = np.array([row['TrendScore_A'], row['MomentumScore_A'], row['VolatilityScore_A']])
+        vector = np.array([row[f"TrendScore_{system_name}"], row[f"MomentumScore_{system_name}"], row[f"VolatilityScore_{system_name}"]])
         distances = {state: np.linalg.norm(vector - np.array(profile)) for state, profile in state_profiles.items()}
         best_state = min(distances, key=distances.get)
         dist = distances[best_state]
@@ -84,20 +88,20 @@ def classify_market_states_system_a(df: pd.DataFrame) -> pd.DataFrame:
             f"5d%: {row['5d_pct_SP500']:+.2f}%, MA20: {row['20d_slope_SP500']:+.2f}, "
             f"RSI: {row['RSI_14_SP500']:.1f}, VIX: {row['Close_VIX']:.2f}, "
             f"ATR: {row['Normalized_ATR']:.4f}, BBW: {row['BBW']:.2f}, "
-            f"Score: {[row['TrendScore_A'], row['MomentumScore_A'], row['VolatilityScore_A']]}, Dist: {dist:.2f}"
+            f"Score: {[row[f'TrendScore_{system_name}'], row[f'MomentumScore_{system_name}'], row[f'VolatilityScore_{system_name}']]}, Dist: {dist:.2f}"
         )
         return pd.Series([best_state, dist, diag])
 
-    df[['MarketState_A', 'EuclideanDist_A', 'Diagnostics_A']] = df.apply(classify_row, axis=1)
+    df[[f"MarketState_{system_name}", f"EuclideanDist_{system_name}", f"Diagnostics_{system_name}"]] = df.apply(classify_row, axis=1)
     return df
 
 # ========== Write to .txt Logs ==========
 def append_to_txt_logs_system_a(df: pd.DataFrame, data_dir: str, logger=None):
     if logger:
-        logger.info("Appending System A logs to txt files...")
+        logger.info(f"Appending System {system_name} logs to txt files...")
 
-    states_txt = os.path.join(data_dir, "MarketStates_System_A.txt")
-    diag_txt = os.path.join(data_dir, "MarketStates_Diagnostics_System_A.txt")
+    states_txt = os.path.join(data_dir, f"MarketStates_System_{system_name}.txt")
+    diag_txt = os.path.join(data_dir, f"MarketStates_Diagnostics_System_{system_name}.txt")
 
     existing_dates = set()
     if os.path.exists(states_txt):
@@ -112,29 +116,42 @@ def append_to_txt_logs_system_a(df: pd.DataFrame, data_dir: str, logger=None):
             date_str = pd.to_datetime(row['Date']).strftime('%Y-%m-%d')
             if date_str in existing_dates:
                 continue
-            f1.write(f"{date_str}, {row['MarketState_A']}\n")
-            f2.write(f"{date_str}, {row['MarketState_A']}, {row['Diagnostics_A']}\n")
+            f1.write(f"{date_str}, {row[f'MarketState_{system_name}']}\n")
+            f2.write(f"{date_str}, {row[f'MarketState_{system_name}']}, {row[f'Diagnostics_{system_name}']}\n")
             new_rows += 1
 
     if logger:
-        logger.info(f"Appended {new_rows} new rows to System A txt logs.")
+        logger.info(f"Appended {new_rows} new rows to System {system_name} txt logs.")
 
 # ========== Optional Standalone Entry ==========
 if __name__ == "__main__":
     try:
-        logger.info(">>> Starting System A classification")
+        logger.info(f">>> Starting System {system_name} classification")
         base_dir = os.path.dirname(os.path.abspath(__file__))
         data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
         input_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
-        output_path = os.path.join(data_dir, "MarketData_with_States_System_A.csv")
+        output_path = os.path.join(data_dir, f"MarketData_with_States_System_{system_name}.csv")
 
         df = pd.read_csv(input_path, parse_dates=["Date"])
         df_classified = classify_market_states_system_a(df)
         df_classified.to_csv(output_path, index=False)
-
         append_to_txt_logs_system_a(df_classified, data_dir, logger)
 
-        logger.info(">>> Finished classification")
+        upload_to_github(
+            file_path=output_path,
+            repo="carolinacraus/market-state-api",
+            path_in_repo=f"data/MarketData_with_States_System_{system_name}.csv",
+            commit_message=f"Daily update: market states system {system_name}"
+        )
+
+        upload_to_github(
+            file_path=os.path.join(data_dir, f"MarketStates_System_{system_name}.txt"),
+            repo="carolinacraus/market-state-api",
+            path_in_repo=f"data/MarketStates_System_{system_name}.txt",
+            commit_message=f"Daily update: market states log system {system_name}"
+        )
+
+        logger.info(f">>> Finished classification for system {system_name}")
     except Exception as e:
-        logger.error(f"Failed to classify and save markets (System A): {e}", exc_info=True)
+        logger.error(f"Failed to classify and save markets (System {system_name}): {e}", exc_info=True)
         sys.exit(1)

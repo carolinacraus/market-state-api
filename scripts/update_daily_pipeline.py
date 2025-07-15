@@ -9,11 +9,8 @@ import sys
 from DataRetrieval_FMP import fetch_all_tickers, get_valid_trading_days, TICKER_MAP
 from MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data, merge_with_market_data
 from calculate_indicators import calculate_all_indicators
-from classify_markets import classify_market_states
 from logger import get_logger
-from sql_upload import upload_market_states
-from classify_markets import classify_market_states, append_to_txt_logs
-
+from scripts.old_scoring_systems.classify_markets import classify_market_states
 
 with open("pipeline_crash_log.txt", "a") as f:
     f.write(f"\n=== Pipeline Triggered ===\n")

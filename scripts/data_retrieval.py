@@ -7,16 +7,13 @@ from scripts.DataRetrieval_FMP import fetch_all_tickers, get_valid_trading_days,
 from scripts.MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data, merge_with_market_data
 from scripts.calculate_indicators import calculate_all_indicators
 from scripts.logger import get_logger
-from scripts.google_drive_uploader import upload_to_drive
+from scripts.github_upload import upload_to_github
 
 load_dotenv()
 logger = get_logger("data_retrieval")
 
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 data_dir = os.path.join(base_dir, "data")
-drive_folder_id = os.getenv("DRIVE_FOLDER_ID")
-
-
 
 def historical_data_retrieval():
     logger.info("Running historical data retrieval...")
@@ -43,13 +40,12 @@ def historical_data_retrieval():
         calculate_all_indicators(market_path, indicator_path)
         logger.info("Technical indicators calculated")
 
-        # Upload files to Google Drive (initial upload)
-        upload_to_drive(market_path, drive_folder_id)
-        upload_to_drive(indicator_path, drive_folder_id)
+        # Upload to GitHub
+        upload_to_github(market_path, "carolinacraus/market-state-api", "data/MarketStates_Data.csv", "Initial historical market data upload")
+        upload_to_github(indicator_path, "carolinacraus/market-state-api", "data/MarketData_with_Indicators.csv", "Initial historical indicators upload")
 
     except Exception as e:
         logger.error(f"[Historical] Data retrieval failed: {e}")
-
 
 def daily_data_retrieval():
     logger.info("Running daily data retrieval...")
@@ -110,13 +106,12 @@ def daily_data_retrieval():
         os.remove(tmp_input)
         os.remove(tmp_output)
 
-        # Upload updated files to Google Drive
-        upload_to_drive(market_path, drive_folder_id)
-        upload_to_drive(indicator_path, drive_folder_id)
+        # Upload to GitHub
+        upload_to_github(market_path, "carolinacraus/market-state-api", "data/MarketStates_Data.csv", "Daily update: market data")
+        upload_to_github(indicator_path, "carolinacraus/market-state-api", "data/MarketData_with_Indicators.csv", "Daily update: indicators")
 
     except Exception as e:
         logger.error(f"[Daily] Data retrieval failed: {e}")
-
 
 if __name__ == "__main__":
     historical_data_retrieval()
