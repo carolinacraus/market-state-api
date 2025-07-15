@@ -78,7 +78,7 @@ def upload_market_state_sql():
         os.environ["LIST_DESCRIPTION"] = request.json.get("list_description")
 
         subprocess.run(
-            [sys.executable, "scripts/sql_uploader.py"],
+            [sys.executable, "scripts/sql_upload.py"],
             check=True,
             capture_output=True,
             text=True
