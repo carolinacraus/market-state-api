@@ -106,10 +106,11 @@ def run_classify_system():
 
         os.environ["SYSTEM_NAME"] = system_name
 
-        if system_name.lower() == "Euclidean":
+        if system_name.lower() == "euclidean":
             script_to_run = "scripts/scoring_Euclidean.py"
-        elif system_name.lower() == "Original":
+        elif system_name.lower() == "original":
             script_to_run = "scripts/scoring_Original.py"
+
         else:
             return jsonify({"error": f"Unsupported system name: {system_name}"}), 400
 

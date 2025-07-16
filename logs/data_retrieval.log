@@ -58,3 +58,7 @@
 2025-07-10 14:24:34,671 - INFO - Market breadth merged successfully
 2025-07-10 14:24:53,825 - INFO - Technical indicators calculated
 2025-07-10 14:24:54,889 - ERROR - [Historical] Data retrieval failed: <HttpError 403 when requesting None returned "Service Accounts do not have storage quota. Leverage shared drives (https://developers.google.com/workspace/drive/api/guides/about-shareddrives), or use OAuth delegation (http://support.google.com/a/answer/7281227) instead.". Details: "[{'message': 'Service Accounts do not have storage quota. Leverage shared drives (https://developers.google.com/workspace/drive/api/guides/about-shareddrives), or use OAuth delegation (http://support.google.com/a/answer/7281227) instead.', 'domain': 'usageLimits', 'reason': 'storageQuotaExceeded'}]">
+2025-07-16 12:07:56,160 - INFO - Running historical data retrieval...
+2025-07-16 12:08:01,345 - INFO - Saved 5165 rows to MarketStates_Data.csv
+2025-07-16 12:08:02,081 - INFO - Market breadth merged successfully
+2025-07-16 12:08:20,411 - INFO - Technical indicators calculated

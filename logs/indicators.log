@@ -94,3 +94,7 @@
 2025-07-11 13:57:45,245 - INFO - Calculating indicators...
 2025-07-11 13:58:04,529 - WARNING - Missing Close_RSP or Close_SPY columns. Skipping RSP/SPY ratio.
 2025-07-11 13:58:05,404 - INFO - Indicators saved to: C:\Users\tndev\Desktop\market-state-api\data\MarketData_with_Indicators.csv
+2025-07-16 12:08:02,134 - INFO - Loaded data from C:\Users\tndev\Desktop\market-state-api\data\MarketStates_Data.csv with 5165 rows.
+2025-07-16 12:08:02,134 - INFO - Calculating indicators...
+2025-07-16 12:08:19,547 - WARNING - Missing Close_RSP or Close_SPY columns. Skipping RSP/SPY ratio.
+2025-07-16 12:08:20,410 - INFO - Indicators saved to: C:\Users\tndev\Desktop\market-state-api\data\MarketData_with_Indicators.csv
