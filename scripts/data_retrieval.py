@@ -47,38 +47,45 @@ def historical_data_retrieval():
     except Exception as e:
         logger.error(f"[Historical] Data retrieval failed: {e}")
 
-def daily_data_retrieval(start_date="2005-01-01", end_date=None):
-    logger.info("Running daily data retrieval...")
+def daily_data_retrieval():
+    logger.info("🚀 Starting daily data retrieval...")
 
     market_path = os.path.join(data_dir, "MarketStates_Data.csv")
     indicator_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
 
+    # Validate market data exists
     if not os.path.exists(market_path):
-        logger.error("MarketStates_Data.csv not found. Run historical_data_retrieval first.")
+        logger.error("❌ MarketStates_Data.csv not found. Run historical_data_retrieval first.")
         return
 
     try:
+        # Load existing market data
         df_existing = pd.read_csv(market_path, parse_dates=["Date"])
         df_existing.sort_values("Date", inplace=True)
 
+        # Calculate the new date range
         last_date = df_existing["Date"].max()
         start_date = (last_date + timedelta(days=1)).strftime("%Y-%m-%d")
         end_date = datetime.today().strftime("%Y-%m-%d")
+        logger.info(f"📅 Fetching data from {start_date} to {end_date}")
 
+        # Fetch and filter valid new data
         df_new = fetch_all_tickers(list(TICKER_MAP.keys()), start_date, end_date)
         valid_days = get_valid_trading_days(start_date, end_date)
         df_new = df_new[df_new["Date"].isin(valid_days)]
 
         if df_new.empty:
-            logger.info("No new market data to append.")
+            logger.info("✅ No new market data to append.")
             return
 
+        # Merge and deduplicate
         df_combined = pd.concat([df_existing, df_new], ignore_index=True)
         df_combined.drop_duplicates(subset=["Date"], keep="last", inplace=True)
         df_combined.sort_values("Date", inplace=True)
         df_combined.to_csv(market_path, index=False)
-        logger.info(f"Appended {len(df_new)} new row(s) to MarketStates_Data.csv")
+        logger.info(f"✅ Appended {len(df_new)} new row(s) to MarketStates_Data.csv")
 
+        # === INDICATOR CALCULATION ===
         if os.path.exists(indicator_path):
             df_existing_ind = pd.read_csv(indicator_path, parse_dates=["Date"])
             known_dates = set(df_existing_ind["Date"])
@@ -86,32 +93,59 @@ def daily_data_retrieval(start_date="2005-01-01", end_date=None):
             df_existing_ind = pd.DataFrame()
             known_dates = set()
 
+        # Detect only new dates to calculate indicators
         df_new_rows = df_combined[~df_combined["Date"].isin(known_dates)]
+
         if df_new_rows.empty:
-            logger.info("No new dates to compute indicators for.")
-            return
+            logger.info("⚠️ No new dates to compute indicators for.")
+        else:
+            tmp_input = os.path.join(data_dir, "temp_new_data.csv")
+            tmp_output = os.path.join(data_dir, "temp_new_indicators.csv")
 
-        tmp_input = os.path.join(data_dir, "temp_new_data.csv")
-        tmp_output = os.path.join(data_dir, "temp_new_indicators.csv")
-        df_new_rows.to_csv(tmp_input, index=False)
-        calculate_all_indicators(tmp_input, tmp_output)
+            df_new_rows.to_csv(tmp_input, index=False)
+            logger.info(f"📥 Saved temp input with {len(df_new_rows)} new rows")
 
-        df_new_indicators = pd.read_csv(tmp_output, parse_dates=["Date"])
-        final_df = pd.concat([df_existing_ind, df_new_indicators], ignore_index=True)
-        final_df.drop_duplicates(subset=["Date"], keep="last", inplace=True)
-        final_df.sort_values("Date", inplace=True)
-        final_df.to_csv(indicator_path, index=False)
-        logger.info(f"Appended indicators for {len(df_new_indicators)} new date(s)")
+            calculate_all_indicators(tmp_input, tmp_output)
 
-        os.remove(tmp_input)
-        os.remove(tmp_output)
+            if not os.path.exists(tmp_output):
+                logger.error("❌ Indicator file was not created.")
+                return
 
-        # Upload to GitHub
-        upload_to_github(market_path, "carolinacraus/market-state-api", "data/MarketStates_Data.csv", "Daily update: market data")
-        upload_to_github(indicator_path, "carolinacraus/market-state-api", "data/MarketData_with_Indicators.csv", "Daily update: indicators")
+            df_new_indicators = pd.read_csv(tmp_output, parse_dates=["Date"])
+            if df_new_indicators.empty:
+                logger.warning("⚠️ Indicator file is empty after calculation.")
+                return
+
+            final_df = pd.concat([df_existing_ind, df_new_indicators], ignore_index=True)
+            final_df.drop_duplicates(subset=["Date"], keep="last", inplace=True)
+            final_df.sort_values("Date", inplace=True)
+            final_df.to_csv(indicator_path, index=False)
+            logger.info(f"✅ Appended indicators for {len(df_new_indicators)} new date(s)")
+
+            # Clean up
+            os.remove(tmp_input)
+            os.remove(tmp_output)
+            logger.info("🧹 Temporary files cleaned up.")
+
+            # Upload indicators
+            upload_to_github(
+                indicator_path,
+                "carolinacraus/market-state-api",
+                "data/MarketData_with_Indicators.csv",
+                "📊 Daily update: indicators"
+            )
+
+        # Upload updated market data
+        upload_to_github(
+            market_path,
+            "carolinacraus/market-state-api",
+            "data/MarketStates_Data.csv",
+            "📈 Daily update: market data"
+        )
 
     except Exception as e:
-        logger.error(f"[Daily] Data retrieval failed: {e}")
+        logger.error(f"[Daily] Data retrieval failed: {e}", exc_info=True)
+
 
 if __name__ == "__main__":
     historical_data_retrieval()

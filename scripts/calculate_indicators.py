@@ -120,21 +120,31 @@ def calculate_all_indicators(input_path, output_path):
         return
 
     logger.info("Calculating indicators...")
-    df = calculate_5d_pct(df)
-    df = calculate_roc(df)
-    df = calculate_rsi(df)
-    df = calculate_regression_slope(df)
-    df = calculate_sma(df)
-    df = calculate_intermarket_scores(df)
-    df = calculate_normalized_atr(df)  # ✅ NEW LINE
-    df = calculate_bbw(df)
-    df = calculate_rsp_spy_ratio(df)
 
     try:
+        df = calculate_5d_pct(df)
+        df = calculate_roc(df)
+        df = calculate_rsi(df)
+        df = calculate_regression_slope(df)
+        df = calculate_sma(df)
+        df = calculate_intermarket_scores(df)
+
+        # Ensure Close_SP500 and 5d_Slope_SP500 exist before proceeding
+        if "Close_SP500" not in df.columns:
+            logger.warning("Close_SP500 not in dataset. Skipping BBW and Normalized_ATR.")
+        else:
+            df = calculate_bbw(df)
+            df = calculate_normalized_atr(df)
+
+        df = calculate_rsp_spy_ratio(df)
+
+        logger.debug(f"Indicator columns: {df.columns.tolist()}")
+        logger.debug(f"Saving {len(df)} rows to {output_path}")
         df.to_csv(output_path, index=False)
         logger.info(f"Indicators saved to: {output_path}")
+
     except Exception as e:
-        logger.error(f"Failed to save output CSV: {e}")
+        logger.error(f"Failed during indicator calculation or save: {e}", exc_info=True)
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
