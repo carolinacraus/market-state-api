@@ -48,14 +48,14 @@ def historical_data_retrieval():
         logger.error(f"[Historical] Data retrieval failed: {e}")
 
 def daily_data_retrieval():
-    logger.info("🚀 Starting daily data retrieval...")
+    logger.info("Starting daily data retrieval...")
 
     market_path = os.path.join(data_dir, "MarketStates_Data.csv")
     indicator_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
 
     # Validate market data exists
     if not os.path.exists(market_path):
-        logger.error("❌ MarketStates_Data.csv not found. Run historical_data_retrieval first.")
+        logger.error("MarketStates_Data.csv not found. Run historical_data_retrieval first.")
         return
 
     try:
@@ -67,7 +67,7 @@ def daily_data_retrieval():
         last_date = df_existing["Date"].max()
         start_date = (last_date + timedelta(days=1)).strftime("%Y-%m-%d")
         end_date = datetime.today().strftime("%Y-%m-%d")
-        logger.info(f"📅 Fetching data from {start_date} to {end_date}")
+        logger.info(f"Fetching data from {start_date} to {end_date}")
 
         # Fetch and filter valid new data
         df_new = fetch_all_tickers(list(TICKER_MAP.keys()), start_date, end_date)
@@ -103,17 +103,17 @@ def daily_data_retrieval():
             tmp_output = os.path.join(data_dir, "temp_new_indicators.csv")
 
             df_new_rows.to_csv(tmp_input, index=False)
-            logger.info(f"📥 Saved temp input with {len(df_new_rows)} new rows")
+            logger.info(f"Saved temp input with {len(df_new_rows)} new rows")
 
             calculate_all_indicators(tmp_input, tmp_output)
 
             if not os.path.exists(tmp_output):
-                logger.error("❌ Indicator file was not created.")
+                logger.error("Indicator file was not created.")
                 return
 
             df_new_indicators = pd.read_csv(tmp_output, parse_dates=["Date"])
             if df_new_indicators.empty:
-                logger.warning("⚠️ Indicator file is empty after calculation.")
+                logger.warning("Indicator file is empty after calculation.")
                 return
 
             final_df = pd.concat([df_existing_ind, df_new_indicators], ignore_index=True)

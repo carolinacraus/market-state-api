@@ -68,62 +68,33 @@ def run_classification():
 @app.route("/run-daily-pipeline", methods=["POST"])
 def run_daily_pipeline():
     try:
-        # Set dataset path
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        data_path = os.path.join(base_dir, "data", "MarketData_with_Indicators.csv")
+        market_path = os.path.join(base_dir, "data", "MarketStates_Data.csv")
+        indicator_path = os.path.join(base_dir, "data", "MarketData_with_Indicators.csv")
 
-        if not os.path.exists(data_path):
-            return jsonify({"error": "MarketData_with_Indicators.csv not found."}), 404
+        if not os.path.exists(market_path):
+            return jsonify({"error": "MarketStates_Data.csv not found."}), 404
 
-        # Load existing dataset
-        df_existing = pd.read_csv(data_path, parse_dates=["Date"])
+        # Determine date range from MarketStates_Data.csv
+        df_existing = pd.read_csv(market_path, parse_dates=["Date"])
         last_date = df_existing["Date"].max()
         start_date = (last_date + timedelta(days=1)).strftime("%Y-%m-%d")
         end_date = datetime.today().strftime("%Y-%m-%d")
 
-        # Skip if already up to date
         if pd.to_datetime(start_date) > pd.to_datetime(end_date):
-            msg = f"Dataset is already up to date. Last available date: {last_date.strftime('%Y-%m-%d')}."
+            msg = f" Dataset is already up to date. Last available date: {last_date.strftime('%Y-%m-%d')}."
             logger.info(msg)
             return jsonify({"status": msg}), 200
 
-        # Retrieve new data
-        df_new = daily_data_retrieval(start_date=start_date, end_date=end_date)
+        logger.info(f" Running daily_data_retrieval for {start_date} to {end_date}")
+        daily_data_retrieval()  # Handles everything internally
 
-        if df_new is None or df_new.empty:
-            msg = f"No new data retrieved between {start_date} and {end_date}."
-            logger.warning(msg)
-            return jsonify({"status": msg}), 200
-
-        # Combine and deduplicate
-        combined = pd.concat([df_existing, df_new], ignore_index=True)
-        combined.drop_duplicates(subset=["Date"], inplace=True)
-        new_rows = len(combined) - len(df_existing)
-
-        if new_rows == 0:
-            msg = f"⚠No new rows added (all data already existed)."
-            logger.info(msg)
-            return jsonify({"status": msg}), 200
-
-        # Save updated CSV
-        combined.sort_values("Date").to_csv(data_path, index=False)
-        logger.info(f"Added {new_rows} new rows. Saved to  MarketStates_data.csv")
-
-        # Push to GitHub
-        upload_to_github(
-            file_path=data_path,
-            repo="your-username/your-repo",              # Replace with your GitHub info
-            path_in_repo="data/MarketData_with_Indicators.csv",
-            commit_message=f"Update MarketStates_data.csv ({start_date} to {end_date})",
-            branch="main"
-        )
-
-        msg = f" Pipeline complete. Added {new_rows} new rows from {start_date} to {end_date}. Dataset pushed to GitHub."
+        msg = f"Ppeline complete. MarketStates_Data.csv and MarketData_with_Indicators.csv updated for {start_date} to {end_date} and pushed to GitHub."
         logger.info(msg)
         return jsonify({"status": msg}), 200
 
     except Exception as e:
-        logger.error(f"Pipeline failed: {e}", exc_info=True)
+        logger.error(f" Pipeline failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route("/upload-market-state-sql", methods=["POST"])
