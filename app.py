@@ -4,11 +4,12 @@ import os
 import requests
 import sys
 from scripts.logger import get_logger
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 from scripts.data_retrieval  import daily_data_retrieval
 from scripts.plot_chart import generate_state_charts_pdf
 from scripts.sql_upload import upload_market_state_to_api
+from scripts.github_upload import upload_to_github
 
 
 app = Flask(__name__)
@@ -67,18 +68,62 @@ def run_classification():
 @app.route("/run-daily-pipeline", methods=["POST"])
 def run_daily_pipeline():
     try:
-        data = request.get_json()
-        start_date = data.get("start_date")
-        end_date = data.get("end_date")
+        # Set dataset path
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        data_path = os.path.join(base_dir, "data", "MarketData_with_Indicators.csv")
 
-        daily_data_retrieval(start_date=start_date, end_date=end_date)
-        logger.info(f"Daily pipeline executed for range: {start_date} to {end_date}")
+        if not os.path.exists(data_path):
+            return jsonify({"error": "MarketData_with_Indicators.csv not found."}), 404
 
-        return jsonify({
-            "status": f"Daily pipeline completed successfully. Retrieved data from {start_date} to {end_date}."
-        }), 200
+        # Load existing dataset
+        df_existing = pd.read_csv(data_path, parse_dates=["Date"])
+        last_date = df_existing["Date"].max()
+        start_date = (last_date + timedelta(days=1)).strftime("%Y-%m-%d")
+        end_date = datetime.today().strftime("%Y-%m-%d")
+
+        # Skip if already up to date
+        if pd.to_datetime(start_date) > pd.to_datetime(end_date):
+            msg = f"Dataset is already up to date. Last available date: {last_date.strftime('%Y-%m-%d')}."
+            logger.info(msg)
+            return jsonify({"status": msg}), 200
+
+        # Retrieve new data
+        df_new = daily_data_retrieval(start_date=start_date, end_date=end_date)
+
+        if df_new is None or df_new.empty:
+            msg = f"No new data retrieved between {start_date} and {end_date}."
+            logger.warning(msg)
+            return jsonify({"status": msg}), 200
+
+        # Combine and deduplicate
+        combined = pd.concat([df_existing, df_new], ignore_index=True)
+        combined.drop_duplicates(subset=["Date"], inplace=True)
+        new_rows = len(combined) - len(df_existing)
+
+        if new_rows == 0:
+            msg = f"⚠No new rows added (all data already existed)."
+            logger.info(msg)
+            return jsonify({"status": msg}), 200
+
+        # Save updated CSV
+        combined.sort_values("Date").to_csv(data_path, index=False)
+        logger.info(f"Added {new_rows} new rows. Saved to  MarketStates_data.csv")
+
+        # Push to GitHub
+        upload_to_github(
+            file_path=data_path,
+            repo="your-username/your-repo",              # Replace with your GitHub info
+            path_in_repo="data/MarketData_with_Indicators.csv",
+            commit_message=f"Update MarketStates_data.csv ({start_date} to {end_date})",
+            branch="main"
+        )
+
+        msg = f" Pipeline complete. Added {new_rows} new rows from {start_date} to {end_date}. Dataset pushed to GitHub."
+        logger.info(msg)
+        return jsonify({"status": msg}), 200
+
     except Exception as e:
-        logger.error(f"Daily pipeline failed: {e}", exc_info=True)
+        logger.error(f"Pipeline failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route("/upload-market-state-sql", methods=["POST"])
