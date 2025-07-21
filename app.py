@@ -1,15 +1,20 @@
 from flask import Flask, request, jsonify, send_file
 import subprocess
 import os
+import requests
 import sys
 from scripts.logger import get_logger
 from datetime import datetime
-import pyodbc
+import pandas as pd
 from scripts.data_retrieval  import daily_data_retrieval
 from scripts.plot_chart import generate_state_charts_pdf
+from scripts.sql_upload import upload_market_state_to_api
+
 
 app = Flask(__name__)
 logger = get_logger("flask_app")
+
+
 
 @app.route("/")
 def index():
@@ -62,9 +67,16 @@ def run_classification():
 @app.route("/run-daily-pipeline", methods=["POST"])
 def run_daily_pipeline():
     try:
-        daily_data_retrieval()
-        logger.info("Daily pipeline executed using in-memory daily_data_retrieval()")
-        return jsonify({"status": "Daily pipeline completed successfully"}), 200
+        data = request.get_json()
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+
+        daily_data_retrieval(start_date=start_date, end_date=end_date)
+        logger.info(f"Daily pipeline executed for range: {start_date} to {end_date}")
+
+        return jsonify({
+            "status": f"Daily pipeline completed successfully. Retrieved data from {start_date} to {end_date}."
+        }), 200
     except Exception as e:
         logger.error(f"Daily pipeline failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
@@ -72,30 +84,17 @@ def run_daily_pipeline():
 @app.route("/upload-market-state-sql", methods=["POST"])
 def upload_market_state_sql():
     try:
-        os.environ["SYSTEM_NAME"] = request.json.get("system_name")
-        os.environ["LIST_ID"] = str(request.json.get("list_id"))
-        os.environ["LIST_NAME"] = request.json.get("list_name")
-        os.environ["LIST_DESCRIPTION"] = request.json.get("list_description")
+        system_name = request.json.get("system_name")
+        if not system_name:
+            return jsonify({"error": "Missing 'system_name'"}), 400
 
-        result = subprocess.run(
-            [sys.executable, "scripts/sql_upload.py"],
-            check=True,
-            capture_output=True,
-            text=True
-        )
-
-        logger.info(result.stdout)
-        return jsonify({"status": "SQL upload complete", "stdout": result.stdout}), 200
-
-    except subprocess.CalledProcessError as e:
-        stderr = e.stderr or "Subprocess failed silently"
-        logger.error(f"SQL uploader failed:\n{stderr}")
-        return jsonify({"error": stderr}), 500
+        result = upload_market_state_to_api(system_name)
+        status_code = 200 if "status" in result else 500
+        return jsonify(result), status_code
 
     except Exception as e:
         logger.error(f"Upload route failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/run-classify-system", methods=["POST"])
 def run_classify_system():
@@ -146,6 +145,7 @@ def update_local_files():
     except Exception as e:
         logger.error(f"Local file update failed: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
+
 @app.route("/generate-market-charts", methods=["POST"])
 def generate_market_charts():
     try:
@@ -184,121 +184,8 @@ def download_file(filename):
         logger.error(f"Error sending file: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/test-sql-connection", methods=["GET"])
-def test_sql_connection():
-    try:
-        # Load from .env
-        driver = os.getenv("SQL_DRIVER_MS")
-        server = os.getenv("SQL_SERVER_MS")
-        db = os.getenv("SQL_DATABASE_MS")
-        user = os.getenv("SQL_UID_MS")
-        pwd = os.getenv("SQL_PWD_MS")
 
-        # Validate
-        if not all([driver, server, db, user, pwd]):
-            missing = [k for k in ["SQL_DRIVER_MS", "SQL_SERVER_MS", "SQL_DATABASE_MS", "SQL_UID_MS", "SQL_PWD_MS"] if not os.getenv(k)]
-            return jsonify({"error": f"Missing env vars: {', '.join(missing)}"}), 500
 
-        # Connect
-        conn_str = (
-            f"DRIVER={{{driver}}};"
-            f"SERVER={server};"
-            f"DATABASE={db};"
-            f"UID={user};"
-            f"PWD={pwd};"
-        )
-        conn = pyodbc.connect(conn_str, timeout=5)
-        cursor = conn.cursor()
-        cursor.execute("SELECT GETDATE()")
-        result = cursor.fetchone()
-
-        return jsonify({
-            "status": "✅ SQL connection successful",
-            "datetime": str(result[0]),
-            "server": server,
-            "database": db
-        }), 200
-
-    except Exception as e:
-        logger.error(f"SQL connection failed: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-# @app.route("/run-classify-upload-system-a", methods=["POST"])
-# def run_classify_upload_system_a():
-#     try:
-#         logger.info("🔁 Starting subprocess: scoring_Euclidean.py")
-#         result = subprocess.run(
-#             [sys.executable, "scripts/scoring_Euclidean.py"],
-#             check=True,
-#             capture_output=True,
-#             text=True
-#         )
-#         logger.info("System A classification completed")
-#         logger.info(result.stdout)
-#
-#         upload_market_states_system_a()
-#         logger.info("System A upload to SQL completed")
-#
-#         return jsonify({"status": "System A classification + upload complete"}), 200
-#
-#     except subprocess.CalledProcessError as e:
-#         stderr = e.stderr or "No stderr output. Possibly a silent crash."
-#         logger.error(f"System A subprocess failed:\n{stderr}")
-#         return jsonify({"error": stderr}), 500
-#
-#     except Exception as e:
-#         logger.error(f"System A Flask handler failed: {e}", exc_info=True)
-#         return jsonify({"error": str(e)}), 500
-#
-#     except Exception as e:
-#         logger.error(f"System A pipeline failed: {e}", exc_info=True)
-#         return jsonify({"error": str(e)}), 500
-#
-#
-# @app.route("/run-classify-upload-system-b", methods=["POST"])
-# def run_classify_upload_system_b():
-#     try:
-#         result = subprocess.run(
-#             [sys.executable, "scripts/scoring_Original.py"],
-#             check=True,
-#             capture_output=True,
-#             text=True
-#         )
-#         logger.info("System B classification completed.")
-#         logger.info(result.stdout)
-#
-#         upload_market_states_system_b()
-#         logger.info("System B upload to SQL completed.")
-#         return jsonify({"status": "System B classification + upload complete"}), 200
-#
-#     except subprocess.CalledProcessError as e:
-#         logger.error(f"System B script failed: {e.stderr}")
-#         return jsonify({"error": e.stderr}), 500
-#
-#     except Exception as e:
-#         logger.error(f"System B pipeline failed: {e}", exc_info=True)
-#         return jsonify({"error": str(e)}), 500
-#
-#
-# @app.route("/upload-market-states-system-a", methods=["POST"])
-# def run_upload_system_a():
-#     try:
-#         upload_market_states_system_a()
-#         logger.info("System A market states uploaded to SQL from API call.")
-#         return jsonify({"status": "System A upload successful"}), 200
-#     except Exception as e:
-#         logger.error(f"System A SQL upload failed: {e}", exc_info=True)
-#         return jsonify({"error": str(e)}), 500
-#
-# @app.route("/upload-market-states-system-b", methods=["POST"])
-# def run_upload_system_b():
-#     try:
-#         upload_market_states_system_b()
-#         logger.info("System B market states uploaded to SQL from API call.")
-#         return jsonify({"status": "System B upload successful"}), 200
-#     except Exception as e:
-#         logger.error(f"System B SQL upload failed: {e}", exc_info=True)
-#         return jsonify({"error": str(e)}), 500
 # # === Dedicated Download Routes ===
 
 @app.route("/download/market-data", methods=["GET"])

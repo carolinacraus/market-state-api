@@ -1,140 +1,82 @@
+# scripts/upload_to_api.py
+
 import os
 import pandas as pd
-import numpy as np
-import logging
-import sys
-import pymssql
-from dotenv import load_dotenv
+import requests
+from datetime import datetime
 
-# ========== Configurable System ==========
-system_name = os.getenv("SYSTEM_NAME", "A")
-list_id = int(os.getenv("LIST_ID", 1))
-list_name = os.getenv("LIST_NAME", "Market States 2005-Present Original Scoring")
-list_description = os.getenv("LIST_DESCRIPTION", "Market States List 7-9 Original Scoring")
+API_BASE = "http://38.67.1.241:46221/v1"
+API_KEY = "djmPfVBCricS/fG8CznCsKGYBtJmUk80urPZC2Yhca7/WHBS55rdOKf1vBZ5S6KvtJUANn+Tshs0L13h7J6axw=="
 
-# ========== Logger Setup ==========
-def get_logger(name=f"upload_sql_system_{system_name.lower()}"):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    logs_dir = os.path.join(base_dir, "logs")
-    os.makedirs(logs_dir, exist_ok=True)
-    log_path = os.path.join(logs_dir, f"{name}.log")
 
-    logger = logging.getLogger(name)
-    if not logger.handlers:
-        handler = logging.FileHandler(log_path)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.setLevel(logging.INFO)
-        logger.addHandler(handler)
+def upload_market_state_to_api(system_name: str) -> dict:
+    system_name = system_name.lower()
 
-    return logger
+    # Map system names to API IDs and file paths
+    list_id_map = {
+        "euclidean": 1,
+        "original": 2
+    }
+    file_map = {
+        "euclidean": "data/MarketStates_System_Euclidean.txt",
+        "original": "data/MarketStates_System_Original.txt"
+    }
 
-logger = get_logger()
+    if system_name not in list_id_map:
+        return {"error": f"Invalid system name '{system_name}'."}
 
-# ========== SQL Connection ==========
-def get_sql_connection():
-    load_dotenv()
-    server   = os.getenv("SQL_SERVER_MS")
-    user     = os.getenv("SQL_UID_MS")
-    password = os.getenv("SQL_PWD_MS")
-    database = os.getenv("SQL_DATABASE_MS")
-    return pymssql.connect(server=server, user=user, password=password, database=database)
+    list_id = list_id_map[system_name]
+    filepath = file_map[system_name]
 
-# ========== Core Upload Function ==========
-def upload_market_states():
-    txt_file_relpath = f"data/MarketStates_System_{system_name}.txt"
+    if not os.path.exists(filepath):
+        return {"error": f"Market state file not found: {filepath}"}
 
-    # Build absolute path
-    script_dir   = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(script_dir)
-    txt_file_path = os.path.join(project_root, txt_file_relpath)
+    # Step 1: Fetch last uploaded date from API
+    direction_url = f"{API_BASE}/MarketStates/{list_id}/Direction"
+    headers = {
+        "accept": "application/json",
+        "X-API-Key": API_KEY
+    }
 
-    if not os.path.isfile(txt_file_path):
-        print(f"ERROR: file not found → {txt_file_path}")
-        return
+    response = requests.get(direction_url, headers=headers)
+    if response.status_code != 200:
+        return {"error": f"Failed to fetch existing data: {response.text}"}
 
-    try:
-        conn = get_sql_connection()
-        cursor = conn.cursor()
+    existing_data = response.json()
+    latest_date = pd.to_datetime("1900-01-01")
+    if existing_data:
+        latest_date = max(pd.to_datetime(entry["date"]) for entry in existing_data)
 
-        # Ensure MarketStates entry exists
-        cursor.execute("SELECT Id FROM dbo.MarketStates WHERE Id = %s", (list_id,))
-        if not cursor.fetchone():
-            cursor.execute("SET IDENTITY_INSERT dbo.MarketStates ON;")
-            cursor.execute(
-                "INSERT INTO dbo.MarketStates (Id, Name, Description) VALUES (%s, %s, %s)",
-                (list_id, list_name, list_description)
-            )
-            cursor.execute("SET IDENTITY_INSERT dbo.MarketStates OFF;")
-            conn.commit()
-            print(f"Inserted new MarketStates entry: {list_id}")
+    # Step 2: Load and filter local data
+    df = pd.read_csv(filepath, sep="\t")
+    df["date"] = pd.to_datetime(df["date"])
+
+    if "direction" not in df.columns:
+        if "state_code" in df.columns:
+            df["direction"] = df["state_code"]
         else:
-            print(f"MarketStates entry {list_id} already exists")
+            return {"error": "Missing 'direction' or 'state_code' column in local file."}
 
-        # Load mapping
-        market_state_mapping = {}
-        cursor.execute("SELECT ID, Category FROM dbo.MarketStateCategories")
-        for cat_id, cat_name in cursor.fetchall():
-            market_state_mapping[cat_name.strip()] = cat_id
+    new_entries = df[df["date"] > latest_date]
+    if new_entries.empty:
+        return {"status": "No new entries to upload."}
 
-        # Read txt file
-        df = pd.read_csv(txt_file_path, names=["Date", "MarketState"])
-        df["Date"] = pd.to_datetime(df["Date"].str.strip(), errors="coerce")
-        df["MarketState"] = df["MarketState"].astype(str).str.strip()
+    # Step 3: Format payload and upload
+    payload = [
+        {"date": row["date"].isoformat(), "direction": int(row["direction"])}
+        for _, row in new_entries.iterrows()
+    ]
 
-        cursor.execute(
-            "SELECT [Date] FROM dbo.MarketStateDirection WHERE MarketStateId = %s",
-            (list_id,)
-        )
-        existing_dates = {r[0].date() for r in cursor.fetchall()}
+    post_response = requests.post(
+        f"{API_BASE}/MarketStates/{list_id}/Direction",
+        json=payload,
+        headers={
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY
+        }
+    )
 
-        new_rows = 0
-        for idx, row in df.iterrows():
-            dt = row["Date"]
-            state = row["MarketState"]
-            direction_id = market_state_mapping.get(state)
-
-            if pd.isna(dt) or direction_id is None:
-                print(f"Skipping row {idx}: invalid → {row.tolist()}")
-                continue
-
-            if dt.date() in existing_dates:
-                print(f"Date {dt.date()} already exists, skipping")
-                continue
-
-            cursor.execute(
-                """
-                INSERT INTO dbo.MarketStateDirection
-                    (MarketStateId, [Date], Direction)
-                VALUES
-                    (%s, %s, %s)
-                """,
-                (list_id, dt.strftime("%Y-%m-%d"), direction_id)
-            )
-            new_rows += 1
-
-        conn.commit()
-        print(f"Inserted {new_rows} new row(s) into dbo.MarketStateDirection.")
-
-
-    except Exception as e:
-
-        logger.error(f"ERROR: {e}", exc_info=True)
-
-        raise  # <-- This raises the error to be caught by __main__ above
-
-
-    finally:
-        try:
-            cursor.close()
-            conn.close()
-        except:
-            pass
-
-# ========== Entry ==========
-if __name__ == "__main__":
-    try:
-        upload_market_states()
-    except Exception as e:
-        logger.error(f"Fatal error during SQL upload: {e}", exc_info=True)
-        sys.exit(1)  # <-- Non-zero exit code tells subprocess it failed
+    if post_response.status_code == 200:
+        return {"status": f"Uploaded {len(payload)} new entries."}
+    else:
+        return {"error": f"Upload failed: {post_response.text}"}
