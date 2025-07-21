@@ -47,7 +47,7 @@ def historical_data_retrieval():
     except Exception as e:
         logger.error(f"[Historical] Data retrieval failed: {e}")
 
-def daily_data_retrieval():
+def daily_data_retrieval(start_date="2005-01-01", end_date=None):
     logger.info("Running daily data retrieval...")
 
     market_path = os.path.join(data_dir, "MarketStates_Data.csv")
