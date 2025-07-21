@@ -132,38 +132,83 @@ if __name__ == "__main__":
         input_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
         output_path = os.path.join(data_dir, f"MarketData_with_States_System_{system_name}.csv")
 
+        # Load full indicators dataset
         df = pd.read_csv(input_path, parse_dates=["Date"])
-        df_classified = classify_market_states_system_a(df)
-        df_classified.to_csv(output_path, index=False)
-        append_to_txt_logs_system_a(df_classified, data_dir, logger)
 
-        # Upload CSV
-        upload_to_github(
+        # Load existing classified data (if it exists)
+        if os.path.exists(output_path):
+            df_existing = pd.read_csv(output_path, parse_dates=["Date"])
+            existing_dates = set(df_existing["Date"])
+            df_new = df[~df["Date"].isin(existing_dates)]
+            logger.info(f"Found {len(df_new)} new rows to classify.")
+        else:
+            df_existing = pd.DataFrame()
+            df_new = df
+            logger.info("No existing state file found. Classifying full dataset.")
+
+        # If no new data, exit early
+        if df_new.empty:
+            msg = f"✅ Market states for System {system_name} already up to date."
+            logger.info(msg)
+            sys.exit(0)
+
+        # Classify new rows
+        df_classified_new = classify_market_states_system_a(df_new)
+
+        # Merge, deduplicate, and sort
+        df_combined = pd.concat([df_existing, df_classified_new], ignore_index=True)
+        df_combined.drop_duplicates(subset=["Date"], keep="last", inplace=True)
+        df_combined.sort_values("Date", inplace=True)
+        df_combined.to_csv(output_path, index=False)
+
+        # Append to logs
+        append_to_txt_logs_system_a(df_classified_new, data_dir, logger)
+
+        # Tagging range
+        start_date = df_classified_new["Date"].min().strftime("%Y-%m-%d")
+        end_date = df_classified_new["Date"].max().strftime("%Y-%m-%d")
+        commit_msg = f"📊 Euclidean classification for {start_date} to {end_date}"
+
+        # Upload updated CSV and get commit SHA
+        commit_sha = upload_to_github(
             file_path=output_path,
             repo="carolinacraus/market-state-api",
             path_in_repo=f"data/MarketData_with_States_System_{system_name}.csv",
-            commit_message=f"Daily update: market states system {system_name}"
+            commit_message=commit_msg,
+            branch="main"
         )
 
-        # Upload MarketStates txt
+        # Upload logs
         txt_path = os.path.join(data_dir, f"MarketStates_System_{system_name}.txt")
         upload_to_github(
             file_path=txt_path,
             repo="carolinacraus/market-state-api",
             path_in_repo=f"data/MarketStates_System_{system_name}.txt",
-            commit_message=f"Daily update: market states log system {system_name}"
+            commit_message=f"📝 States log update ({start_date} to {end_date}) [{system_name}]"
         )
 
-        # Upload Diagnostics txt ✅
         diag_path = os.path.join(data_dir, f"MarketStates_Diagnostics_System_{system_name}.txt")
         upload_to_github(
             file_path=diag_path,
             repo="carolinacraus/market-state-api",
             path_in_repo=f"data/MarketStates_Diagnostics_System_{system_name}.txt",
-            commit_message=f"Daily update: diagnostics system {system_name}"
+            commit_message=f"🧪 Diagnostics log update ({start_date} to {end_date}) [{system_name}]"
         )
 
-        logger.info(f">>> Finished classification for system {system_name}")
+        # Tag the commit
+        if commit_sha:
+            tag = f"tag-{system_name.lower()}-{start_date}-to-{end_date}"
+            from github_upload import create_github_tag
+            create_github_tag(
+                repo="carolinacraus/market-state-api",
+                tag_name=tag,
+                tag_message=commit_msg,
+                commit_sha=commit_sha,
+                branch="main"
+            )
+
+        logger.info(f">>> Finished classification and update for system {system_name}")
+
     except Exception as e:
-        logger.error(f"Failed to classify and save markets (System {system_name}): {e}", exc_info=True)
+        logger.error(f"❌ Failed to classify and upload markets (System {system_name}): {e}", exc_info=True)
         sys.exit(1)

@@ -7,7 +7,7 @@ from scripts.DataRetrieval_FMP import fetch_all_tickers, get_valid_trading_days,
 from scripts.MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data, merge_with_market_data
 from scripts.calculate_indicators import calculate_all_indicators
 from scripts.logger import get_logger
-from scripts.github_upload import upload_to_github
+from scripts.github_upload import upload_to_github, create_github_tag
 
 load_dotenv()
 logger = get_logger("data_retrieval")
@@ -142,6 +142,28 @@ def daily_data_retrieval():
             "data/MarketStates_Data.csv",
             "📈 Daily update: market data"
         )
+
+        # Upload market data and get commit SHA
+        commit_sha = upload_to_github(
+            market_path,
+            "carolinacraus/market-state-api",
+            "data/MarketStates_Data.csv",
+            f"📈 Daily update: market data ({start_date} to {end_date})",
+            branch="main"
+        )
+
+        # Tag the commit if upload succeeded
+        if commit_sha:
+            tag = f"update-{start_date}-to-{end_date}"
+            message = f"Market update for {start_date} to {end_date}"
+            create_github_tag(
+                repo="carolinacraus/market-state-api",
+                tag_name=tag,
+                tag_message=message,
+                commit_sha=commit_sha,
+                branch="main"
+            )
+
 
     except Exception as e:
         logger.error(f"[Daily] Data retrieval failed: {e}", exc_info=True)
