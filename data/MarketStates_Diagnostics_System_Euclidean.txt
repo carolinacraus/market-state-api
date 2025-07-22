@@ -2,3 +2,5 @@
 2025-07-17, Volatile Chop, 5d%: +nan%, MA20: +nan, RSI: nan, VIX: nan, ATR: nan, BBW: nan, Score: [0, -2, -4], Dist: 2.83
 2025-07-18, Volatile Chop, 5d%: +nan%, MA20: +nan, RSI: nan, VIX: 16.41, ATR: nan, BBW: nan, Score: [0, -2, -2], Dist: 2.00
 2025-07-21, Volatile Chop, 5d%: +nan%, MA20: +nan, RSI: nan, VIX: 16.65, ATR: nan, BBW: nan, Score: [0, -2, -2], Dist: 2.00
+date,state,diagnostics
+2025-07-22,Volatile Chop,5d%: +nan%, MA20: +nan, RSI: nan, VIX: 16.57, ATR: nan, BBW: nan, Score: [0, -2, -2], Dist: 2.00
