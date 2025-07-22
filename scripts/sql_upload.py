@@ -43,12 +43,14 @@ def upload_market_state_to_api(system_name: str) -> dict:
         return {"error": f"Failed to fetch existing data: {response.text}"}
 
     existing_data = response.json()
+    print("EXISTING DATA:", existing_data)
+
     latest_date = pd.to_datetime("1900-01-01")
     if existing_data:
         latest_date = max(pd.to_datetime(entry["date"]) for entry in existing_data)
 
     # Step 2: Load and filter local data
-    df = pd.read_csv(filepath, sep="\t")
+    df = pd.read_csv(filepath, sep=", ", engine="python")
     df["date"] = pd.to_datetime(df["date"])
 
     if "direction" not in df.columns:
