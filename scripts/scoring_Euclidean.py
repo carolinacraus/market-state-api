@@ -164,15 +164,18 @@ def append_to_txt_logs_system_a(df: pd.DataFrame, data_dir: str, logger=None):
 if __name__ == "__main__":
     try:
         logger.info(f">>> Starting System {system_name} classification")
+
         base_dir = os.path.dirname(os.path.abspath(__file__))
         data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
+        os.makedirs(data_dir, exist_ok=True)
+
         input_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
         output_path = os.path.join(data_dir, f"MarketData_with_States_System_{system_name}.csv")
 
         # Load full indicators dataset
         df = pd.read_csv(input_path, parse_dates=["Date"])
 
-        # Load existing classified data (if it exists)
+        # Load existing classified data (if any)
         if os.path.exists(output_path):
             df_existing = pd.read_csv(output_path, parse_dates=["Date"])
             existing_dates = set(df_existing["Date"])
@@ -189,24 +192,31 @@ if __name__ == "__main__":
             logger.info(msg)
             sys.exit(0)
 
-        # Classify new rows
+        # Classify only the new rows
         df_classified_new = classify_market_states_system_a(df_new)
 
-        # Merge, deduplicate, and sort
+        # Merge and save updated CSV
         df_combined = pd.concat([df_existing, df_classified_new], ignore_index=True)
         df_combined.drop_duplicates(subset=["Date"], keep="last", inplace=True)
         df_combined.sort_values("Date", inplace=True)
         df_combined.to_csv(output_path, index=False)
 
-        # Append to logs
-        append_to_txt_logs_system_a(df_classified_new, data_dir, logger)
+        # === Write to TXT Logs ===
+        if df_existing.empty:
+            logger.info("No previous file — creating txt logs from full classification.")
+            append_to_txt_logs_system_a(df_classified_new, data_dir, logger)
+        elif not df_classified_new.empty:
+            logger.info(f"Appending {len(df_classified_new)} new entries to txt logs...")
+            append_to_txt_logs_system_a(df_classified_new, data_dir, logger)
+        else:
+            logger.warning("⚠️ No new rows to append to txt logs")
 
-        # Tagging range
+        # Commit metadata
         start_date = df_classified_new["Date"].min().strftime("%Y-%m-%d")
         end_date = df_classified_new["Date"].max().strftime("%Y-%m-%d")
         commit_msg = f"📊 Euclidean classification for {start_date} to {end_date}"
 
-        # Upload updated CSV and get commit SHA
+        # Upload classified CSV
         commit_sha = upload_to_github(
             file_path=output_path,
             repo="carolinacraus/market-state-api",
@@ -232,7 +242,7 @@ if __name__ == "__main__":
             commit_message=f"🧪 Diagnostics log update ({start_date} to {end_date}) [{system_name}]"
         )
 
-        # Tag the commit
+        # Create GitHub tag
         if commit_sha:
             tag = f"tag-{system_name.lower()}-{start_date}-to-{end_date}"
             from github_upload import create_github_tag
@@ -244,7 +254,7 @@ if __name__ == "__main__":
                 branch="main"
             )
 
-        logger.info(f">>> Finished classification and update for system {system_name}")
+        logger.info(f">>> ✅ Finished classification and update for system {system_name}")
 
     except Exception as e:
         logger.error(f"❌ Failed to classify and upload markets (System {system_name}): {e}", exc_info=True)
