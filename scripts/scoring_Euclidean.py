@@ -102,10 +102,11 @@ def append_to_txt_logs_system_a(df: pd.DataFrame, data_dir: str, logger=None):
     if logger:
         logger.info(f"Appending System {system_name} logs to txt files...")
 
+    # Define paths
     states_txt = os.path.join(data_dir, f"MarketStates_System_{system_name}.txt")
     diag_txt = os.path.join(data_dir, f"MarketStates_Diagnostics_System_{system_name}.txt")
 
-    # Mapping for numeric direction values
+    # Market state → direction mapping
     state_to_id = {
         "Steady Climb": 1,
         "Trend Pullback": 2,
@@ -114,13 +115,22 @@ def append_to_txt_logs_system_a(df: pd.DataFrame, data_dir: str, logger=None):
         "Volatile Chop": 5
     }
 
+    df = df.copy()
+    df["Date"] = pd.to_datetime(df["Date"])
+    df = df[df["Date"] >= pd.to_datetime("2005-01-03")]  # Only keep rows from Jan 3, 2005 onwards
+
+    # Load existing entries if file exists
     existing_dates = set()
-    if os.path.exists(states_txt):
+    write_header = not os.path.exists(states_txt)
+
+    if not write_header:
         with open(states_txt, 'r') as f:
-            existing_dates = {line.split(",")[0].strip() for line in f.readlines()[1:]}  # skip header
+            existing_dates = {
+                line.strip().split(",")[0]
+                for line in f.readlines()[1:]  # skip header
+            }
 
     new_rows = 0
-    write_header = not os.path.exists(states_txt)
 
     with open(states_txt, 'a') as f1, open(diag_txt, 'a') as f2:
         if write_header:
@@ -128,25 +138,27 @@ def append_to_txt_logs_system_a(df: pd.DataFrame, data_dir: str, logger=None):
             f2.write("date,state,diagnostics\n")
 
         for _, row in df.iterrows():
-            if pd.isna(row['Date']):
+            if pd.isna(row["Date"]):
                 continue
-            date_str = pd.to_datetime(row['Date']).strftime('%Y-%m-%d')
-            state = row[f"MarketState_{system_name}"]
+
+            date_str = row["Date"].strftime("%Y-%m-%d")
+            state = row.get(f"MarketState_{system_name}")
             direction = state_to_id.get(state)
 
             if direction is None:
-                logger.warning(f"Unknown state '{state}' — skipping row.")
+                logger.warning(f"⚠️ Unknown state '{state}' — skipping.")
                 continue
 
             if date_str in existing_dates:
-                continue
+                continue  # already logged
 
             f1.write(f"{date_str},{state},{direction}\n")
-            f2.write(f"{date_str},{state},{row[f'Diagnostics_{system_name}']}\n")
+            f2.write(f"{date_str},{state},{row.get(f'Diagnostics_{system_name}', '')}\n")
             new_rows += 1
 
     if logger:
-        logger.info(f"Appended {new_rows} new rows to System {system_name} txt logs.")
+        logger.info(f"✅ Appended {new_rows} new rows to System {system_name} txt logs.")
+
 
 # ========== Optional Standalone Entry ==========
 if __name__ == "__main__":
