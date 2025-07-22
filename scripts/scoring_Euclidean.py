@@ -106,11 +106,7 @@ def append_diagnostics_txt_log(df: pd.DataFrame, data_dir: str, logger=None):
         "Trend Pullback": 2,
         "Orderly Decline": 3,
         "Sharp Decline": 4,
-        "Volatile Chop": 5,
-        "Volatile Drop": 6,
-        "Bullish Momentum": 7,
-        "Bearish Collapse": 8,
-        "Stagnant Drift": 9
+        "Volatile Chop": 5
     }
 
     # Load existing dates
@@ -120,7 +116,6 @@ def append_diagnostics_txt_log(df: pd.DataFrame, data_dir: str, logger=None):
             existing_dates = {line.split(",")[0].strip() for line in f.readlines()[1:]}
 
     new_rows = []
-
     for _, row in df.iterrows():
         date_str = pd.to_datetime(row["Date"]).strftime("%Y-%m-%d")
         state = row.get(f"MarketState_{system_name}")
@@ -162,8 +157,7 @@ def append_diagnostics_txt_log(df: pd.DataFrame, data_dir: str, logger=None):
         logger.info(f"✅ Appended {len(df_new)} new diagnostics rows to {diag_txt}")
 
 
-
-# ========== Optional Standalone Entry ==========
+# ========== Main ==========
 if __name__ == "__main__":
     try:
         logger.info(f">>> Starting System {system_name} classification")
@@ -175,12 +169,12 @@ if __name__ == "__main__":
         input_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
         output_path = os.path.join(data_dir, f"MarketData_with_States_System_{system_name}.csv")
 
-        # Load full indicator dataset
         df = pd.read_csv(input_path, parse_dates=["Date"])
+        df["Date"] = pd.to_datetime(df["Date"]).dt.normalize()  # Normalize
 
-        # Load existing state file to filter only new rows
         if os.path.exists(output_path):
             df_existing = pd.read_csv(output_path, parse_dates=["Date"])
+            df_existing["Date"] = pd.to_datetime(df_existing["Date"]).dt.normalize()
             existing_dates = set(df_existing["Date"])
             df_new = df[~df["Date"].isin(existing_dates)]
             logger.info(f"Found {len(df_new)} new rows to classify.")
@@ -189,29 +183,23 @@ if __name__ == "__main__":
             df_new = df
             logger.info("No existing state file found. Classifying full dataset.")
 
-        # Exit early if nothing new
         if df_new.empty:
             logger.info(f"Market states for System {system_name} already up to date.")
             sys.exit(0)
 
-        # Classify new rows
         df_classified_new = classify_market_states_system_a(df_new)
 
-        # Merge and save updated CSV
         df_combined = pd.concat([df_existing, df_classified_new], ignore_index=True)
         df_combined.drop_duplicates(subset=["Date"], keep="last", inplace=True)
         df_combined.sort_values("Date", inplace=True)
         df_combined.to_csv(output_path, index=False)
 
-        # Append diagnostics log with one consolidated file
         append_diagnostics_txt_log(df_classified_new, data_dir, logger)
 
-        # Commit info
         start_date = df_classified_new["Date"].min().strftime("%Y-%m-%d")
         end_date = df_classified_new["Date"].max().strftime("%Y-%m-%d")
         commit_msg = f"📊 Euclidean classification for {start_date} to {end_date}"
 
-        # Upload updated CSV
         commit_sha = upload_to_github(
             file_path=output_path,
             repo="carolinacraus/market-state-api",
@@ -220,7 +208,6 @@ if __name__ == "__main__":
             branch="main"
         )
 
-        # Upload diagnostics .txt
         diag_path = os.path.join(data_dir, f"MarketStates_Diagnostics_System_{system_name}.txt")
         upload_to_github(
             file_path=diag_path,
@@ -230,10 +217,10 @@ if __name__ == "__main__":
             branch="main"
         )
 
-        # Tag the commit
         if commit_sha:
             tag = f"tag-{system_name.lower()}-{start_date}-to-{end_date}"
             from github_upload import create_github_tag
+
             create_github_tag(
                 repo="carolinacraus/market-state-api",
                 tag_name=tag,
