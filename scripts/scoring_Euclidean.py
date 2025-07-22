@@ -7,7 +7,7 @@ from logger import get_logger
 from github_upload import upload_to_github  # ✅ New import
 
 # ========== Configurable System Name ==========
-system_name = "Euclidean"  # 🔁 Set this to customize file naming
+system_name = "Euclidean"
 
 # ========== Logger Setup ==========
 def get_logger(name=f"market_state_system_{system_name.lower()}"):
@@ -18,7 +18,7 @@ def get_logger(name=f"market_state_system_{system_name.lower()}"):
 
     logger = logging.getLogger(name)
     if not logger.handlers:
-        handler = logging.FileHandler(log_path)
+        handler = logging.FileHandler(log_path, encoding='utf-8')
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         logger.setLevel(logging.INFO)
@@ -37,45 +37,32 @@ state_profiles = {
     "Volatile Chop": [0, 0, -2],
 }
 
-
-
 # ========== Scoring Logic ==========
 def compute_scores_system_a(row):
     trend_score = 0
     sp500 = row.get("5d_pct_SP500", np.nan)
     ma20 = row.get("20d_slope_SP500", np.nan)
 
-    if sp500 > 2.0: trend_score += 2
-    elif 0.5 <= sp500 <= 2.0: trend_score += 1
-    elif -0.5 <= sp500 < 0.5: trend_score += 0
-    elif -2.0 <= sp500 < -0.5: trend_score += -1
-    elif sp500 < -2.0: trend_score += -2
+    # Trend
+    trend_score += 2 if sp500 > 2.0 else 1 if 0.5 <= sp500 <= 2.0 else 0 if -0.5 <= sp500 < 0.5 else -1 if -2.0 <= sp500 < -0.5 else -2
+    trend_score += 2 if ma20 > 0.5 else 1 if 0.2 <= ma20 <= 0.5 else 0 if -0.2 <= ma20 < 0.2 else -1 if -0.5 <= ma20 < -0.2 else -2
 
-    if ma20 > 0.5: trend_score += 2
-    elif 0.2 <= ma20 <= 0.5: trend_score += 1
-    elif -0.2 <= ma20 < 0.2: trend_score += 0
-    elif -0.5 <= ma20 < -0.2: trend_score += -1
-    elif ma20 < -0.5: trend_score += -2
-
+    # Momentum
     rsi = row.get("RSI_14_SP500", np.nan)
-    if rsi > 65: momentum_score = 2
-    elif 50 <= rsi <= 65: momentum_score = 1
-    elif 40 <= rsi < 50: momentum_score = 0
-    else: momentum_score = -2
+    momentum_score = 2 if rsi > 65 else 1 if 50 <= rsi <= 65 else 0 if 40 <= rsi < 50 else -2
 
+    # Volatility
     vix = row.get("Close_VIX", np.nan)
     atr = row.get("Normalized_ATR", np.nan)
     bbw = row.get("BBW", np.nan)
-
     vix_score = 1 if vix < 16 else 0 if 16 <= vix <= 20 else -1 if 20 < vix <= 25 else -2
     atr_score = 1 if atr < 0.01 else 0 if 0.01 <= atr <= 0.015 else -1
     bbw_score = 1 if bbw < 3.0 else 0 if 3.0 <= bbw <= 5.0 else -1
-
     volatility_score = vix_score + atr_score + bbw_score
 
     return pd.Series([trend_score, momentum_score, volatility_score])
 
-# ========== Classification Function ==========
+# ========== Classification ==========
 def classify_market_states_system_a(df: pd.DataFrame) -> pd.DataFrame:
     logger.info(f"Scoring and classifying market states (System {system_name})...")
     df = df.copy()
@@ -97,10 +84,9 @@ def classify_market_states_system_a(df: pd.DataFrame) -> pd.DataFrame:
     df[[f"MarketState_{system_name}", f"EuclideanDist_{system_name}", f"Diagnostics_{system_name}"]] = df.apply(classify_row, axis=1)
     return df
 
-# ========== Write to .txt Logs ==========
+# ========== Append to Diagnostics Log ==========
 def append_diagnostics_txt_log(df: pd.DataFrame, data_dir: str, logger=None):
     diag_txt = os.path.join(data_dir, f"MarketStates_Diagnostics_System_{system_name}.txt")
-
     state_to_id = {
         "Steady Climb": 1,
         "Trend Pullback": 2,
@@ -109,10 +95,9 @@ def append_diagnostics_txt_log(df: pd.DataFrame, data_dir: str, logger=None):
         "Volatile Chop": 5
     }
 
-    # Load existing dates
     existing_dates = set()
     if os.path.exists(diag_txt):
-        with open(diag_txt, "r") as f:
+        with open(diag_txt, "r", encoding="utf-8") as f:
             existing_dates = {line.split(",")[0].strip() for line in f.readlines()[1:]}
 
     new_rows = []
@@ -120,7 +105,6 @@ def append_diagnostics_txt_log(df: pd.DataFrame, data_dir: str, logger=None):
         date_str = pd.to_datetime(row["Date"]).strftime("%Y-%m-%d")
         state = row.get(f"MarketState_{system_name}")
         direction = state_to_id.get(state)
-
         if pd.isna(row["Date"]) or direction is None or date_str in existing_dates:
             continue
 
@@ -139,15 +123,12 @@ def append_diagnostics_txt_log(df: pd.DataFrame, data_dir: str, logger=None):
         })
 
     if not new_rows:
-        if logger:
-            logger.info("No new diagnostics rows to append.")
+        if logger: logger.info("No new diagnostics rows to append.")
         return
 
     df_new = pd.DataFrame(new_rows)
-
-    # Write to file (append with header if new)
     write_header = not os.path.exists(diag_txt)
-    with open(diag_txt, "a") as f:
+    with open(diag_txt, "a", encoding="utf-8") as f:
         if write_header:
             f.write(", ".join(df_new.columns) + "\n")
         for _, row in df_new.iterrows():
@@ -155,7 +136,6 @@ def append_diagnostics_txt_log(df: pd.DataFrame, data_dir: str, logger=None):
 
     if logger:
         logger.info(f"✅ Appended {len(df_new)} new diagnostics rows to {diag_txt}")
-
 
 # ========== Main ==========
 if __name__ == "__main__":
@@ -170,7 +150,7 @@ if __name__ == "__main__":
         output_path = os.path.join(data_dir, f"MarketData_with_States_System_{system_name}.csv")
 
         df = pd.read_csv(input_path, parse_dates=["Date"])
-        df["Date"] = pd.to_datetime(df["Date"]).dt.normalize()  # Normalize
+        df["Date"] = pd.to_datetime(df["Date"]).dt.normalize()
 
         if os.path.exists(output_path):
             df_existing = pd.read_csv(output_path, parse_dates=["Date"])
@@ -220,7 +200,6 @@ if __name__ == "__main__":
         if commit_sha:
             tag = f"tag-{system_name.lower()}-{start_date}-to-{end_date}"
             from github_upload import create_github_tag
-
             create_github_tag(
                 repo="carolinacraus/market-state-api",
                 tag_name=tag,

@@ -1,5 +1,3 @@
-# scripts/upload_to_api.py
-
 import os
 import pandas as pd
 import requests
@@ -12,7 +10,7 @@ API_KEY = "djmPfVBCricS/fG8CznCsKGYBtJmUk80urPZC2Yhca7/WHBS55rdOKf1vBZ5S6KvtJUAN
 def upload_market_state_to_api(system_name: str) -> dict:
     system_name = system_name.lower()
 
-    # Map system names to API IDs and file paths
+    # === System mappings ===
     list_id_map = {
         "euclidean": 1,
         "original": 2
@@ -31,7 +29,7 @@ def upload_market_state_to_api(system_name: str) -> dict:
     if not os.path.exists(filepath):
         return {"error": f"Market state file not found: {filepath}"}
 
-    # Step 1: Fetch last uploaded date from API
+    # === Step 1: Get latest uploaded date from API ===
     direction_url = f"{API_BASE}/MarketStates/{list_id}/Direction"
     headers = {
         "accept": "application/json",
@@ -43,32 +41,36 @@ def upload_market_state_to_api(system_name: str) -> dict:
         return {"error": f"Failed to fetch existing data: {response.text}"}
 
     existing_data = response.json()
-    print("EXISTING DATA:", existing_data)
-
     latest_date = pd.to_datetime("1900-01-01")
     if existing_data:
-        latest_date = max(pd.to_datetime(entry["date"]) for entry in existing_data)
+        latest_date = max(pd.to_datetime(entry["date"]).normalize() for entry in existing_data)
 
-    # Step 2: Load and filter local data
-    df = pd.read_csv(filepath, sep=", ", engine="python")
-    df["date"] = pd.to_datetime(df["date"])
+    # === Step 2: Load local .txt file ===
+    try:
+        df = pd.read_csv(filepath, sep=", ", engine="python")
+    except Exception as e:
+        return {"error": f"Failed to read local diagnostics file: {e}"}
 
-    if "direction" not in df.columns:
-        if "state_code" in df.columns:
-            df["direction"] = df["state_code"]
-        else:
-            return {"error": "Missing 'direction' or 'state_code' column in local file."}
+    if "date" not in df.columns or "direction" not in df.columns:
+        return {"error": "Required columns 'date' or 'direction' not found in diagnostics file."}
 
-    new_entries = df[df["date"] > latest_date]
+    df["date"] = pd.to_datetime(df["date"]).dt.normalize()
+
+    # === Step 3: Filter for new entries ===
+    new_entries = df[df["date"] > latest_date].copy()
     if new_entries.empty:
-        return {"status": "No new entries to upload."}
+        return {"status": f"No new entries to upload. Latest date: {latest_date.date()}"}
 
-    # Step 3: Format payload and upload
+    # === Step 4: Format payload ===
     payload = [
-        {"date": row["date"].isoformat(), "direction": int(row["direction"])}
+        {
+            "date": row["date"].isoformat(),
+            "direction": int(row["direction"])
+        }
         for _, row in new_entries.iterrows()
     ]
 
+    # === Step 5: Upload to API ===
     post_response = requests.post(
         f"{API_BASE}/MarketStates/{list_id}/Direction",
         json=payload,
@@ -79,6 +81,13 @@ def upload_market_state_to_api(system_name: str) -> dict:
     )
 
     if post_response.status_code == 200:
-        return {"status": f"Uploaded {len(payload)} new entries."}
+        return {
+            "status": f"✅ Uploaded {len(payload)} new entries.",
+            "from_date": new_entries['date'].min().strftime("%Y-%m-%d"),
+            "to_date": new_entries['date'].max().strftime("%Y-%m-%d")
+        }
     else:
-        return {"error": f"Upload failed: {post_response.text}"}
+        return {
+            "error": f"❌ Upload failed: {post_response.text}",
+            "payload_sample": payload[:3]
+        }
