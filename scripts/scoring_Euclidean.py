@@ -98,66 +98,69 @@ def classify_market_states_system_a(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 # ========== Write to .txt Logs ==========
-def append_to_txt_logs_system_a(df: pd.DataFrame, data_dir: str, logger=None):
-    if logger:
-        logger.info(f"Appending System {system_name} logs to txt files...")
-
-    # Define paths
-    states_txt = os.path.join(data_dir, f"MarketStates_System_{system_name}.txt")
+def append_diagnostics_txt_log(df: pd.DataFrame, data_dir: str, logger=None):
     diag_txt = os.path.join(data_dir, f"MarketStates_Diagnostics_System_{system_name}.txt")
 
-    # Market state → direction mapping
     state_to_id = {
         "Steady Climb": 1,
         "Trend Pullback": 2,
         "Orderly Decline": 3,
         "Sharp Decline": 4,
-        "Volatile Chop": 5
+        "Volatile Chop": 5,
+        "Volatile Drop": 6,
+        "Bullish Momentum": 7,
+        "Bearish Collapse": 8,
+        "Stagnant Drift": 9
     }
 
-    df = df.copy()
-    df["Date"] = pd.to_datetime(df["Date"])
-    df = df[df["Date"] >= pd.to_datetime("2005-01-03")]  # Only keep rows from Jan 3, 2005 onwards
-
-    # Load existing entries if file exists
+    # Load existing dates
     existing_dates = set()
-    write_header = not os.path.exists(states_txt)
+    if os.path.exists(diag_txt):
+        with open(diag_txt, "r") as f:
+            existing_dates = {line.split(",")[0].strip() for line in f.readlines()[1:]}
 
-    if not write_header:
-        with open(states_txt, 'r') as f:
-            existing_dates = {
-                line.strip().split(",")[0]
-                for line in f.readlines()[1:]  # skip header
-            }
+    new_rows = []
 
-    new_rows = 0
+    for _, row in df.iterrows():
+        date_str = pd.to_datetime(row["Date"]).strftime("%Y-%m-%d")
+        state = row.get(f"MarketState_{system_name}")
+        direction = state_to_id.get(state)
 
-    with open(states_txt, 'a') as f1, open(diag_txt, 'a') as f2:
+        if pd.isna(row["Date"]) or direction is None or date_str in existing_dates:
+            continue
+
+        new_rows.append({
+            "date": date_str,
+            "state": state,
+            "direction": direction,
+            "5d%": f"{row.get('5d_pct_SP500', np.nan):+.2f}",
+            "MA20": f"{row.get('20d_slope_SP500', np.nan):+.2f}",
+            "RSI": f"{row.get('RSI_14_SP500', np.nan):.1f}",
+            "VIX": f"{row.get('Close_VIX', np.nan):.2f}",
+            "ATR": f"{row.get('Normalized_ATR', np.nan):.4f}",
+            "BBW": f"{row.get('BBW', np.nan):.2f}",
+            "Score": f"[{row.get(f'TrendScore_{system_name}')}, {row.get(f'MomentumScore_{system_name}')}, {row.get(f'VolatilityScore_{system_name}')}]",
+            "Dist": f"{row.get(f'EuclideanDist_{system_name}', np.nan):.2f}"
+        })
+
+    if not new_rows:
+        if logger:
+            logger.info("No new diagnostics rows to append.")
+        return
+
+    df_new = pd.DataFrame(new_rows)
+
+    # Write to file (append with header if new)
+    write_header = not os.path.exists(diag_txt)
+    with open(diag_txt, "a") as f:
         if write_header:
-            f1.write("date,state,direction\n")
-            f2.write("date,state,diagnostics\n")
-
-        for _, row in df.iterrows():
-            if pd.isna(row["Date"]):
-                continue
-
-            date_str = row["Date"].strftime("%Y-%m-%d")
-            state = row.get(f"MarketState_{system_name}")
-            direction = state_to_id.get(state)
-
-            if direction is None:
-                logger.warning(f"⚠️ Unknown state '{state}' — skipping.")
-                continue
-
-            if date_str in existing_dates:
-                continue  # already logged
-
-            f1.write(f"{date_str},{state},{direction}\n")
-            f2.write(f"{date_str},{state},{row.get(f'Diagnostics_{system_name}', '')}\n")
-            new_rows += 1
+            f.write(", ".join(df_new.columns) + "\n")
+        for _, row in df_new.iterrows():
+            f.write(", ".join(str(row[col]) for col in df_new.columns) + "\n")
 
     if logger:
-        logger.info(f"✅ Appended {new_rows} new rows to System {system_name} txt logs.")
+        logger.info(f"✅ Appended {len(df_new)} new diagnostics rows to {diag_txt}")
+
 
 
 # ========== Optional Standalone Entry ==========
@@ -172,10 +175,10 @@ if __name__ == "__main__":
         input_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
         output_path = os.path.join(data_dir, f"MarketData_with_States_System_{system_name}.csv")
 
-        # Load full indicators dataset
+        # Load full indicator dataset
         df = pd.read_csv(input_path, parse_dates=["Date"])
 
-        # Load existing classified data (if any)
+        # Load existing state file to filter only new rows
         if os.path.exists(output_path):
             df_existing = pd.read_csv(output_path, parse_dates=["Date"])
             existing_dates = set(df_existing["Date"])
@@ -186,13 +189,12 @@ if __name__ == "__main__":
             df_new = df
             logger.info("No existing state file found. Classifying full dataset.")
 
-        # If no new data, exit early
+        # Exit early if nothing new
         if df_new.empty:
-            msg = f"✅ Market states for System {system_name} already up to date."
-            logger.info(msg)
+            logger.info(f"Market states for System {system_name} already up to date.")
             sys.exit(0)
 
-        # Classify only the new rows
+        # Classify new rows
         df_classified_new = classify_market_states_system_a(df_new)
 
         # Merge and save updated CSV
@@ -201,22 +203,15 @@ if __name__ == "__main__":
         df_combined.sort_values("Date", inplace=True)
         df_combined.to_csv(output_path, index=False)
 
-        # === Write to TXT Logs ===
-        if df_existing.empty:
-            logger.info("No previous file — creating txt logs from full classification.")
-            append_to_txt_logs_system_a(df_classified_new, data_dir, logger)
-        elif not df_classified_new.empty:
-            logger.info(f"Appending {len(df_classified_new)} new entries to txt logs...")
-            append_to_txt_logs_system_a(df_classified_new, data_dir, logger)
-        else:
-            logger.warning("⚠️ No new rows to append to txt logs")
+        # Append diagnostics log with one consolidated file
+        append_diagnostics_txt_log(df_classified_new, data_dir, logger)
 
-        # Commit metadata
+        # Commit info
         start_date = df_classified_new["Date"].min().strftime("%Y-%m-%d")
         end_date = df_classified_new["Date"].max().strftime("%Y-%m-%d")
         commit_msg = f"📊 Euclidean classification for {start_date} to {end_date}"
 
-        # Upload classified CSV
+        # Upload updated CSV
         commit_sha = upload_to_github(
             file_path=output_path,
             repo="carolinacraus/market-state-api",
@@ -225,24 +220,17 @@ if __name__ == "__main__":
             branch="main"
         )
 
-        # Upload logs
-        txt_path = os.path.join(data_dir, f"MarketStates_System_{system_name}.txt")
-        upload_to_github(
-            file_path=txt_path,
-            repo="carolinacraus/market-state-api",
-            path_in_repo=f"data/MarketStates_System_{system_name}.txt",
-            commit_message=f"📝 States log update ({start_date} to {end_date}) [{system_name}]"
-        )
-
+        # Upload diagnostics .txt
         diag_path = os.path.join(data_dir, f"MarketStates_Diagnostics_System_{system_name}.txt")
         upload_to_github(
             file_path=diag_path,
             repo="carolinacraus/market-state-api",
             path_in_repo=f"data/MarketStates_Diagnostics_System_{system_name}.txt",
-            commit_message=f"🧪 Diagnostics log update ({start_date} to {end_date}) [{system_name}]"
+            commit_message=f"🧪 Diagnostics update ({start_date} to {end_date}) [{system_name}]",
+            branch="main"
         )
 
-        # Create GitHub tag
+        # Tag the commit
         if commit_sha:
             tag = f"tag-{system_name.lower()}-{start_date}-to-{end_date}"
             from github_upload import create_github_tag
