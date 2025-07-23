@@ -62,7 +62,8 @@ def upload_market_state_to_api(system_name: str) -> dict:
 
     # === Step 2: Read local .txt file ===
     try:
-        df = pd.read_csv(filepath, index_col=False)
+        df = pd.read_csv(filepath, index_col=False, skipinitialspace=True)
+
     except Exception as e:
         logger.exception("❌ Failed to read local file")
         return {"error": f"Failed to read local file: {e}"}
