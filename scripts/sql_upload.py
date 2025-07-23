@@ -20,8 +20,8 @@ def upload_market_state_to_api(system_name: str) -> dict:
         "original": 2
     }
     file_map = {
-        "euclidean": "MarketStates_System_Euclidean.txt",
-        "original": "MarketStates_System_Original.txt"
+        "euclidean": "MarketStates_Diagnostics_System_Euclidean.txt",
+        "original": "MarketStates_Diagnostics_System_Original.txt"
     }
 
     if system_name not in list_id_map:
