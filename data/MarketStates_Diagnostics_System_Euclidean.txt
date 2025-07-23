@@ -5169,3 +5169,4 @@ date, state, direction, 5d%, MA20, RSI, VIX, ATR, BBW, Score, Dist
 2025-07-18, Volatile Chop, 5, +nan, +nan, nan, 16.41, nan, nan, [0, -2, -2], 2.00
 2025-07-21, Volatile Chop, 5, +nan, +nan, nan, 16.65, nan, nan, [0, -2, -2], 2.00
 2025-07-22, Volatile Chop, 5, +nan, +nan, nan, 16.57, nan, nan, [0, -2, -2], 2.00
+2025-07-23, Sharp Decline, 4, +nan, +nan, nan, nan, nan, nan, [-4, -2, -4], 2.24
