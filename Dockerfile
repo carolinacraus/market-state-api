@@ -1,5 +1,3 @@
-# Dockerfile
-
 FROM python:3.11-slim
 
 # Install ODBC driver & dependencies
@@ -16,15 +14,18 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy project files
-COPY . .
+# Copy project files explicitly
+COPY scripts/ ./scripts/
+COPY data/ ./data/
+COPY app.py .
+COPY requirements.txt .
 
-# Install Python dependencies
+# Install dependencies
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Expose Flask port
 EXPOSE 5000
 
-# Start the Flask app
+# Start app
 CMD ["python", "app.py"]
