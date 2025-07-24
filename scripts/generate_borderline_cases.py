@@ -63,6 +63,15 @@ df_combined = pd.concat([df, df_scores], axis=1)
 
 # === Filter and Save ===
 df_borderline = df_combined[df_combined["IsBorderline"] == True]
-df_borderline.to_csv(output_path, index=False)
+# Create yearly folder if needed
+yearly_dir = os.path.join(data_dir, "borderline_by_year")
+os.makedirs(yearly_dir, exist_ok=True)
+
+df_borderline["Year"] = df_borderline["Date"].dt.year
+
+for year, group in df_borderline.groupby("Year"):
+    year_path = os.path.join(yearly_dir, f"Borderline_{system_name}_{year}.csv")
+    group.to_csv(year_path, index=False)
+    print(f"📁 Saved {len(group)} borderline rows for {year} → {year_path}")
 
 print(f"✅ Saved {len(df_borderline)} borderline rows to {output_path}")
