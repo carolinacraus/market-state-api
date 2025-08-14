@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, send_file
 import subprocess
 import os
-import requests
 import sys
 from scripts.logger import get_logger
 from datetime import datetime, timedelta
@@ -9,8 +8,6 @@ import pandas as pd
 from scripts.data_retrieval  import daily_data_retrieval
 from scripts.plot_chart import generate_state_charts_pdf
 from scripts.sql_upload import upload_market_state_to_api
-from scripts.github_upload import upload_to_github
-
 
 app = Flask(__name__)
 logger = get_logger("flask_app")

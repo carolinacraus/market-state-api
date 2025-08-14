@@ -2,7 +2,6 @@ import requests
 import pandas as pd
 import os
 import pandas_market_calendars as mcal
-from datetime import datetime
 import argparse
 from dotenv import load_dotenv
 from scripts.logger import get_logger
