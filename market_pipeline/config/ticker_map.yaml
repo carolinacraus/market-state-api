@@ -1,0 +1,10 @@
+# config/ticker_map.yaml
+ticker_map:
+  "^GSPC": "SP500"
+  "^TNX": "Yield"
+  "DX-Y.NYB": "DXY"
+  "CL=F": "Oil"
+  "HG=F": "Copper"
+  "GC=F": "Gold"
+  "^VIX": "VIX"
+  "RSP": "RSP"

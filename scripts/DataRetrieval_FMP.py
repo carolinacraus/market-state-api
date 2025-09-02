@@ -1,100 +1,96 @@
-import requests
-import pandas as pd
 import os
-import pandas_market_calendars as mcal
 import argparse
+from datetime import datetime
 from dotenv import load_dotenv
+import pandas as pd
+import requests
+from pandas_market_calendars import get_calendar
+
+from market_pipeline.config import PipelineConfig
 from scripts.logger import get_logger
 
-# Load environment variables
-load_dotenv()
 
-# Initialize logger
-logger = get_logger("fmp_data")
+class FmpMarketDataFetcher:
+    def __init__(self, api_key: str, ticker_map: dict, logger):
+        self.api_key = api_key
+        self.ticker_map = ticker_map
+        self.logger = logger
+        self.calendar = get_calendar("NYSE")
 
-# Get API key
-API_KEY = os.getenv("FMP_API_KEY")
+    def get_valid_trading_days(self, start_date: str, end_date: str) -> pd.DatetimeIndex:
+        schedule = self.calendar.schedule(start_date=start_date, end_date=end_date)
+        return pd.to_datetime(schedule.index)
 
-# Ticker mappings
-TICKER_MAP = {
-    "^GSPC": "SP500",
-    "^TNX": "Yield",
-    "DX-Y.NYB": "DXY",
-    "CL=F": "Oil",
-    "HG=F": "Copper",
-    "GC=F": "Gold",
-    "^VIX": "VIX",
-    "RSP": "RSP"
-}
+    def _build_url(self, ticker: str, start_date: str, end_date: str) -> str:
+        symbol = requests.utils.quote(ticker, safe="")
+        return (
+            f"https://financialmodelingprep.com/api/v3/historical-price-full/{symbol}"
+            f"?from={start_date}&to={end_date}&apikey={self.api_key}"
+        )
 
-def get_valid_trading_days(start_date, end_date):
-    nyse = mcal.get_calendar("NYSE")
-    schedule = nyse.schedule(start_date=start_date, end_date=end_date)
-    return pd.to_datetime(schedule.index)
+    def fetch_ticker(self, ticker: str, start_date: str, end_date: str) -> pd.DataFrame | None:
+        self.logger.info(f"Fetching data for {ticker}")
+        try:
+            resp = requests.get(self._build_url(ticker, start_date, end_date))
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            self.logger.error(f"Request failed for {ticker}: {e}")
+            return None
 
-def fetch_ticker_data(ticker, start_date, end_date):
-    logger.info(f"Fetching data for: {ticker}")
-    symbol = ticker.replace("^", "%5E").replace("=", "%3D")
-    url = (
-        f"https://financialmodelingprep.com/api/v3/historical-price-full/{symbol}"
-        f"?from={start_date}&to={end_date}&apikey={API_KEY}"
-    )
+        payload = resp.json()
+        hist = payload.get("historical")
+        if not hist:
+            self.logger.warning(f"No historical data for {ticker}")
+            return None
 
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-    except Exception as e:
-        logger.error(f"Request failed for {ticker}: {e}")
-        return None
+        df = pd.DataFrame(hist)
+        df["Date"] = pd.to_datetime(df["date"])
+        df = df[df["Date"].dt.weekday < 5].sort_values("Date")
 
-    data = response.json()
-    if "historical" not in data:
-        logger.warning(f"No historical data found for {ticker}")
-        return None
+        short = self.ticker_map.get(ticker, ticker)
+        cols = ["open", "high", "low", "close", "volume"]
+        df = df[["Date"] + cols]
+        df.columns = ["Date"] + [f"{c.title()}_{short}" for c in cols]
+        return df
 
-    df = pd.DataFrame(data["historical"])
-    df['date'] = pd.to_datetime(df['date'])
-    df = df[df['date'].dt.weekday < 5]
-    df.sort_values("date", inplace=True)
+    def fetch_all(self, start_date: str, end_date: str) -> pd.DataFrame:
+        merged = None
+        for ticker in self.ticker_map:
+            df = self.fetch_ticker(ticker, start_date, end_date)
+            if df is not None:
+                merged = df if merged is None else merged.merge(df, on="Date", how="outer")
+        return merged or pd.DataFrame()
 
-    short_name = TICKER_MAP[ticker]
-    df = df[['date', 'open', 'high', 'low', 'close', 'volume']]
-    df.columns = ['Date', f'Open_{short_name}', f'High_{short_name}', f'Low_{short_name}', f'Close_{short_name}', f'Volume_{short_name}']
 
-    return df
+def main():
+    load_dotenv()
+    config = PipelineConfig()
+    logger = get_logger("fmp_data")
+    api_key = os.getenv("FMP_API_KEY")
 
-def fetch_all_tickers(tickers, start_date, end_date):
-    all_data = None
-    for ticker in tickers:
-        df = fetch_ticker_data(ticker, start_date, end_date)
-        if df is not None:
-            if all_data is None:
-                all_data = df
-            else:
-                all_data = pd.merge(all_data, df, on="Date", how="outer")
-    return all_data
+    if not api_key:
+        logger.error("Missing FMP_API_KEY in environment")
+        return
 
-def save_market_data(start_date, end_date):
-    tickers = list(TICKER_MAP.keys())
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(base_dir, "data")
-    os.makedirs(data_dir, exist_ok=True)
-    filepath = os.path.join(data_dir, "MarketStates_Data.csv")
-
-    df = fetch_all_tickers(tickers, start_date, end_date)
-    if df is not None:
-        valid_days = get_valid_trading_days(start_date, end_date)
-        df = df[df["Date"].isin(valid_days)]
-        df.sort_values("Date", inplace=True)
-        df.to_csv(filepath, index=False)
-        logger.info(f"✅ Saved MarketStates_Data.csv to {filepath}")
-    else:
-        logger.warning("⚠️ No data retrieved from FMP API.")
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Build initial historical market dataset")
-    parser.add_argument("--start", required=True, help="Start date in YYYY-MM-DD format")
-    parser.add_argument("--end", required=True, help="End date in YYYY-MM-DD format")
+    parser = argparse.ArgumentParser(description="Fetch historical market data from FMP")
+    parser.add_argument("--start", required=True, help="YYYY-MM-DD")
+    parser.add_argument("--end",   required=True, help="YYYY-MM-DD")
     args = parser.parse_args()
 
-    save_market_data(args.start, args.end)
+    fetcher = FmpMarketDataFetcher(api_key, config.ticker_map, logger)
+    df = fetcher.fetch_all(args.start, args.end)
+    if df.empty:
+        logger.warning("No data retrieved; exiting.")
+        return
+
+    valid_days = fetcher.get_valid_trading_days(args.start, args.end)
+    df = df[df["Date"].isin(valid_days)].sort_values("Date")
+
+    os.makedirs(config.data_dir, exist_ok=True)
+    out_path = os.path.join(config.data_dir, config.market_file)
+    df.to_csv(out_path, index=False)
+    logger.info(f"✅ Saved market data to {out_path}")
+
+
+if __name__ == "__main__":
+    main()

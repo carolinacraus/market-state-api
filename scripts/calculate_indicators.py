@@ -1,153 +1,197 @@
-# calculate_indicators.py
-import pandas as pd
-import numpy as np
+# scripts/calculate_indicators.py
+from __future__ import annotations
+
 import os
+from typing import Iterable, Optional
+
+import numpy as np
+import pandas as pd
+
 from scripts.logger import get_logger
 
-# Initialize logger
-logger = get_logger("indicators")
 
-def load_data(file_path):
-    try:
-        df = pd.read_csv(file_path, parse_dates=['Date'])
-        df.sort_values('Date', inplace=True)
-        df.reset_index(drop=True, inplace=True)
-        logger.info(f"Loaded data from {file_path} with {len(df)} rows.")
-        return df
-    except Exception as e:
-        logger.error(f"Failed to load CSV: {e}")
-        return pd.DataFrame()
+# Public entry point -----------------------------------------------------------
 
-def calculate_5d_pct(df):
-    for col in df.columns:
-        if col.startswith("Close_"):
-            base = col.replace("Close_", "")
-            df[f"5d_pct_{base}"] = df[col].pct_change(periods=5) * 100
-    return df
+def calculate_all_indicators(
+    input_path: str,
+    output_path: str,
+    *,
+    logger=None,
+    rsi_window: int = 14,
+    roc_window: int = 10,
+    slope_window: int = 20,
+    sma_window: int = 3,
+    bbw_window: int = 20,
+) -> None:
+    """
+    Load CSV at input_path, compute indicators, and write CSV to output_path.
 
-def calculate_roc(df, window=10):
-    for col in df.columns:
-        if col.startswith("Close_"):
-            base = col.replace("Close_", "")
-            df[f"{window}d_ROC_{base}"] = df[col].pct_change(periods=window) * 100
-    return df
+    Parameters
+    ----------
+    input_path : str
+        Path to the base market CSV (with Close_*, Open_*, High_*, Low_* columns).
+    output_path : str
+        Path to write the enriched CSV with indicators.
+    logger : logging.Logger, optional
+        Logger to use. If None, a module logger will be created.
+    rsi_window, roc_window, slope_window, sma_window, bbw_window : int
+        Windows for respective indicators.
+    """
+    log = logger or get_logger("indicators")
 
-def calculate_rsi(df, window=14):
-    for col in df.columns:
-        if col.startswith("Close_"):
-            base = col.replace("Close_", "")
-            delta = df[col].diff()
-            gain = delta.where(delta > 0, 0.0)
-            loss = -delta.where(delta < 0, 0.0)
-            avg_gain = gain.rolling(window=window, min_periods=window).mean()
-            avg_loss = loss.rolling(window=window, min_periods=window).mean()
-            rs = avg_gain / avg_loss
-            rsi = 100 - (100 / (1 + rs))
-            df[f"RSI_{window}_{base}"] = rsi
-    return df
-
-def calculate_regression_slope(df, window=20):
-    for col in df.columns:
-        if col.startswith("Close_"):
-            base = col.replace("Close_", "")
-            slopes = []
-            for i in range(len(df)):
-                if i < window:
-                    slopes.append(np.nan)
-                else:
-                    y = df[col].iloc[i-window:i]
-                    x = np.arange(window)
-                    slope, _ = np.polyfit(x, y, 1)
-                    slopes.append(slope)
-            df[f"{window}d_slope_{base}"] = slopes
-    return df
-
-def calculate_sma(df, window=3):
-    for col in df.columns:
-        if col.startswith("Close_"):
-            base = col.replace("Close_", "")
-            df[f"SMA_{window}_{base}"] = df[col].rolling(window=window).mean()
-    return df
-
-def calculate_intermarket_scores(df):
-    for col in df.columns:
-        if col.startswith("Close_"):
-            base = col.replace("Close_", "")
-            slopes = []
-            for i in range(len(df)):
-                if i < 5:
-                    slopes.append(np.nan)
-                else:
-                    y = df[col].iloc[i-5:i]
-                    x = np.arange(5)
-                    slope, _ = np.polyfit(x, y, 1)
-                    slopes.append(slope)
-            df[f"5d_Slope_{base}"] = slopes
-    return df
-
-def calculate_bbw(df, window=20):
-    target = 'Close_SP500'
-    if target not in df.columns:
-        logger.warning(f"{target} not found. Skipping BBW.")
-        return df
-
-    rolling_mean = df[target].rolling(window)
-    sma = rolling_mean.mean()
-    std = rolling_mean.std()
-    upper_band = sma + 2 * std
-    lower_band = sma - 2 * std
-    bbw = (upper_band - lower_band) / sma
-    df['BBW'] = bbw
-    return df
-
-def calculate_rsp_spy_ratio(df):
-    if 'Close_RSP' in df.columns and 'Close_SPY' in df.columns:
-        df['RSP/SPY_Ratio'] = df['Close_RSP'] / df['Close_SPY']
-    else:
-        logger.warning("Missing Close_RSP or Close_SPY columns. Skipping RSP/SPY ratio.")
-    return df
-
-def calculate_normalized_atr(df):
-    if "5d_Slope_SP500" in df.columns and "Close_SP500" in df.columns:
-        df["Normalized_ATR"] = df["5d_Slope_SP500"] / df["Close_SP500"]
-    else:
-        logger.warning("Missing 5d_Slope_SP500 or Close_SP500 for Normalized_ATR calculation.")
-    return df
-
-def calculate_all_indicators(input_path, output_path):
-    df = load_data(input_path)
+    df = _load_csv(input_path, log)
     if df.empty:
-        logger.warning("No data to process. Aborting.")
+        log.warning("No data to process. Aborting indicator pipeline.")
         return
 
-    logger.info("Calculating indicators...")
+    log.info("Calculating indicators…")
 
     try:
-        df = calculate_5d_pct(df)
-        df = calculate_roc(df)
-        df = calculate_rsi(df)
-        df = calculate_regression_slope(df)
-        df = calculate_sma(df)
-        df = calculate_intermarket_scores(df)
+        close_cols = _find_cols(df, prefix="Close_")
 
-        # Ensure Close_SP500 and 5d_Slope_SP500 exist before proceeding
-        if "Close_SP500" not in df.columns:
-            logger.warning("Close_SP500 not in dataset. Skipping BBW and Normalized_ATR.")
+        df = _calc_5d_pct(df, close_cols)
+        df = _calc_roc(df, close_cols, window=roc_window)
+        df = _calc_rsi(df, close_cols, window=rsi_window)
+        df = _calc_regression_slope(df, close_cols, window=slope_window)
+        df = _calc_sma(df, close_cols, window=sma_window)
+        df = _calc_intermarket_5d_slope(df, close_cols)
+
+        # SP500-dependent metrics
+        if "Close_SP500" in df.columns:
+            df = _calc_bbw(df, price_col="Close_SP500", window=bbw_window)
+            # Kept for back-compat with your Mod3 logic:
+            if "5d_Slope_SP500" in df.columns:
+                df["Normalized_ATR"] = df["5d_Slope_SP500"] / df["Close_SP500"]
+            else:
+                log.warning("Missing 5d_Slope_SP500; skipping Normalized_ATR.")
         else:
-            df = calculate_bbw(df)
-            df = calculate_normalized_atr(df)
+            log.warning("Close_SP500 not found. Skipping BBW and Normalized_ATR.")
 
-        df = calculate_rsp_spy_ratio(df)
+        # RSP/SPY
+        if "Close_RSP" in df.columns and "Close_SPY" in df.columns:
+            df["RSP/SPY_Ratio"] = df["Close_RSP"] / df["Close_SPY"]
+        else:
+            log.info("RSP/SPY ratio skipped (requires Close_RSP and Close_SPY).")
 
-        logger.debug(f"Indicator columns: {df.columns.tolist()}")
-        logger.debug(f"Saving {len(df)} rows to {output_path}")
+        # Save
+        os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
         df.to_csv(output_path, index=False)
-        logger.info(f"Indicators saved to: {output_path}")
+        log.info(f"✅ Indicators saved: {output_path} ({len(df)} rows)")
 
     except Exception as e:
-        logger.error(f"Failed during indicator calculation or save: {e}", exc_info=True)
+        log.error(f"Failed during indicator calculation or save: {e}", exc_info=True)
+
+
+# Internals -------------------------------------------------------------------
+
+def _load_csv(path: str, logger) -> pd.DataFrame:
+    try:
+        df = pd.read_csv(path, parse_dates=["Date"])
+        df.sort_values("Date", inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        logger.info(f"Loaded {path} ({len(df)} rows).")
+        return df
+    except Exception as e:
+        logger.error(f"Failed to load CSV {path}: {e}", exc_info=True)
+        return pd.DataFrame()
+
+
+def _find_cols(df: pd.DataFrame, *, prefix: str) -> list[str]:
+    return [c for c in df.columns if c.startswith(prefix)]
+
+
+def _base_name(col: str, prefix: str = "Close_") -> str:
+    return col[len(prefix):]
+
+
+def _calc_5d_pct(df: pd.DataFrame, close_cols: Iterable[str]) -> pd.DataFrame:
+    for col in close_cols:
+        base = _base_name(col)
+        df[f"5d_pct_{base}"] = df[col].pct_change(periods=5) * 100.0
+    return df
+
+
+def _calc_roc(df: pd.DataFrame, close_cols: Iterable[str], *, window: int) -> pd.DataFrame:
+    for col in close_cols:
+        base = _base_name(col)
+        df[f"{window}d_ROC_{base}"] = df[col].pct_change(window) * 100.0
+    return df
+
+
+def _calc_rsi(df: pd.DataFrame, close_cols: Iterable[str], *, window: int) -> pd.DataFrame:
+    for col in close_cols:
+        base = _base_name(col)
+        delta = df[col].diff()
+        gain = delta.clip(lower=0.0)
+        loss = (-delta).clip(lower=0.0)
+
+        # Wilder's smoothing (simple rolling mean as a practical approximation)
+        avg_gain = gain.rolling(window=window, min_periods=window).mean()
+        avg_loss = loss.rolling(window=window, min_periods=window).mean()
+        rs = avg_gain / avg_loss
+        rsi = 100.0 - (100.0 / (1.0 + rs))
+        df[f"RSI_{window}_{base}"] = rsi
+    return df
+
+
+def _calc_regression_slope(df: pd.DataFrame, close_cols: Iterable[str], *, window: int) -> pd.DataFrame:
+    """
+    OLS slope over a rolling window (units: price per day).
+    """
+    x = np.arange(window)
+    for col in close_cols:
+        base = _base_name(col)
+        slopes = np.full(len(df), np.nan)
+        # vectorized-ish loop (keeps code simple & correct for moderate sizes)
+        for i in range(window, len(df)):
+            y = df[col].to_numpy()[i - window:i]
+            slope, _ = np.polyfit(x, y, 1)
+            slopes[i] = slope
+        df[f"{window}d_slope_{base}"] = slopes
+    return df
+
+
+def _calc_sma(df: pd.DataFrame, close_cols: Iterable[str], *, window: int) -> pd.DataFrame:
+    for col in close_cols:
+        base = _base_name(col)
+        df[f"SMA_{window}_{base}"] = df[col].rolling(window=window, min_periods=window).mean()
+    return df
+
+
+def _calc_intermarket_5d_slope(df: pd.DataFrame, close_cols: Iterable[str]) -> pd.DataFrame:
+    """
+    5-day OLS slope, used by your downstream Mod3 'Normalized_ATR' proxy.
+    """
+    x = np.arange(5)
+    for col in close_cols:
+        base = _base_name(col)
+        slopes = np.full(len(df), np.nan)
+        for i in range(5, len(df)):
+            y = df[col].to_numpy()[i - 5:i]
+            slope, _ = np.polyfit(x, y, 1)
+            slopes[i] = slope
+        df[f"5d_Slope_{base}"] = slopes
+    return df
+
+
+def _calc_bbw(df: pd.DataFrame, *, price_col: str, window: int) -> pd.DataFrame:
+    """
+    Bollinger Band Width (BBW) = (Upper - Lower) / SMA
+    Upper/Lower = SMA ± 2*STD over 'window'.
+    """
+    sma = df[price_col].rolling(window=window, min_periods=window).mean()
+    std = df[price_col].rolling(window=window, min_periods=window).std()
+    upper = sma + 2 * std
+    lower = sma - 2 * std
+    with np.errstate(invalid="ignore", divide="ignore"):
+        df["BBW"] = (upper - lower) / sma
+    return df
+
+
+# Optional CLI for local runs --------------------------------------------------
 
 if __name__ == "__main__":
+    # Minimal local run helper (kept simple for dev convenience)
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_dir = os.path.join(base_dir, "data")
     input_path = os.path.join(data_dir, "MarketStates_Data.csv")
