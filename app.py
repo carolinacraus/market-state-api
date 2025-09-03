@@ -14,7 +14,7 @@ app = Flask(__name__)
 logger = get_logger("flask_api")
 
 # Simple header-based auth
-API_KEY = os.getenv("API_KEY")  # set in Railway env
+API_KEY = os.getenv("RAILWAY_TOKEN")  # set in Railway env
 
 
 def _require_key():
