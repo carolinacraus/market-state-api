@@ -52,14 +52,14 @@ class DataFetcher:
     # -------- Public API --------
 
     def fetch_historical(self) -> bool:
-        """Fetch full history and write to market CSV. Returns True if wrote data."""
+        """Fetch full history and write to market CSV. Returns True if wrote data_sept."""
         start = self.cfg.historical_start
         end = self.cfg.historical_end
-        self.logger.info(f"Fetching historical market data: {start} → {end}")
+        self.logger.info(f"Fetching historical market data_sept: {start} → {end}")
 
         df = self._fmp.fetch_all(start, end)
         if df.empty:
-            self.logger.warning("No data retrieved for historical fetch.")
+            self.logger.warning("No data_sept retrieved for historical fetch.")
             return False
 
         df = self._restrict_to_valid_days(df, start, end)
@@ -88,7 +88,7 @@ class DataFetcher:
 
         start = next_date.strftime("%Y-%m-%d")
         end = today.strftime("%Y-%m-%d")
-        self.logger.info(f"Fetching daily market data: {start} → {end}")
+        self.logger.info(f"Fetching daily market data_sept: {start} → {end}")
 
         df_new = self._fmp.fetch_all(start, end)
         if df_new.empty:

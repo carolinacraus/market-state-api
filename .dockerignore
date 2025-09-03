@@ -1,0 +1,14 @@
+.git
+.gitignore
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.env
+.venv/
+venv/
+data/*         # runtime outputs; don’t bake into image
+logs/*
+results/*
+.ipynb_checkpoints/
