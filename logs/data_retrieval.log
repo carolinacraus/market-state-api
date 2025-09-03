@@ -62,3 +62,53 @@
 2025-07-16 12:08:01,345 - INFO - Saved 5165 rows to MarketStates_Data.csv
 2025-07-16 12:08:02,081 - INFO - Market breadth merged successfully
 2025-07-16 12:08:20,411 - INFO - Technical indicators calculated
+2025-09-02 15:59:10,102 - INFO - Fetching data for ^GSPC
+2025-09-02 15:59:10,782 - INFO - Fetching data for ^TNX
+2025-09-02 15:59:11,396 - INFO - Fetching data for DX-Y.NYB
+2025-09-02 15:59:12,058 - INFO - Fetching data for CL=F
+2025-09-02 15:59:12,704 - INFO - Fetching data for HG=F
+2025-09-02 15:59:13,371 - INFO - Fetching data for GC=F
+2025-09-02 15:59:13,989 - INFO - Fetching data for ^VIX
+2025-09-02 15:59:14,535 - INFO - Fetching data for RSP
+2025-09-02 16:12:38,760 - INFO - Fetching data for ^GSPC
+2025-09-02 16:12:39,703 - INFO - Fetching data for ^TNX
+2025-09-02 16:12:40,827 - INFO - Fetching data for DX-Y.NYB
+2025-09-02 16:12:41,538 - INFO - Fetching data for CL=F
+2025-09-02 16:12:42,153 - INFO - Fetching data for HG=F
+2025-09-02 16:12:43,677 - INFO - Fetching data for GC=F
+2025-09-02 16:12:44,308 - INFO - Fetching data for ^VIX
+2025-09-02 16:12:44,985 - INFO - Fetching data for RSP
+2025-09-02 16:12:47,565 - INFO - Loaded data\MarketStates_Data.csv (5198 rows).
+2025-09-02 16:12:47,565 - INFO - Calculating indicators…
+2025-09-02 16:12:49,970 - INFO - RSP/SPY ratio skipped (requires Close_RSP and Close_SPY).
+2025-09-02 16:39:15,055 - INFO - Fetching data for ^GSPC
+2025-09-02 16:39:15,461 - INFO - Fetching data for ^TNX
+2025-09-02 16:39:15,704 - INFO - Fetching data for DX-Y.NYB
+2025-09-02 16:39:15,957 - INFO - Fetching data for CL=F
+2025-09-02 16:39:16,578 - INFO - Fetching data for HG=F
+2025-09-02 16:39:16,851 - INFO - Fetching data for GC=F
+2025-09-02 16:39:17,121 - INFO - Fetching data for ^VIX
+2025-09-02 16:39:17,363 - INFO - Fetching data for RSP
+2025-09-02 16:39:18,085 - INFO - Fetching breadth from 2025-09-03…
+2025-09-02 16:39:18,189 - ERROR - JSON decode failed for $NYAD.N. Response head: 
+2025-09-02 16:39:18,240 - ERROR - JSON decode failed for $NYMO.N. Response head: 
+2025-09-02 16:39:18,758 - INFO - Loaded data\MarketStates_Data.csv (5199 rows).
+2025-09-02 16:39:18,758 - INFO - Calculating indicators…
+2025-09-02 16:39:21,286 - INFO - RSP/SPY ratio skipped (requires Close_RSP and Close_SPY).
+2025-09-02 16:42:13,495 - INFO - Fetching breadth from 2025-09-03…
+2025-09-02 16:42:13,593 - ERROR - JSON decode failed for $NYAD.N. Response head: 
+2025-09-02 16:42:13,662 - ERROR - JSON decode failed for $NYMO.N. Response head: 
+2025-09-02 16:42:14,213 - INFO - Loaded data\MarketStates_Data.csv (5199 rows).
+2025-09-02 16:42:14,213 - INFO - Calculating indicators…
+2025-09-02 16:42:16,761 - INFO - RSP/SPY ratio skipped (requires Close_RSP and Close_SPY).
+2025-09-02 17:16:36,200 - INFO - Fetching data for ^GSPC
+2025-09-02 17:16:36,867 - INFO - Fetching data for ^TNX
+2025-09-02 17:16:37,505 - INFO - Fetching data for DX-Y.NYB
+2025-09-02 17:16:38,143 - INFO - Fetching data for CL=F
+2025-09-02 17:16:38,775 - INFO - Fetching data for HG=F
+2025-09-02 17:16:39,382 - INFO - Fetching data for GC=F
+2025-09-02 17:16:39,985 - INFO - Fetching data for ^VIX
+2025-09-02 17:16:40,688 - INFO - Fetching data for RSP
+2025-09-02 17:16:43,897 - INFO - Loaded C:\Users\caroc\PycharmProjects\market-state-api\data\MarketStates_Data.csv (5198 rows).
+2025-09-02 17:16:43,897 - INFO - Calculating indicators…
+2025-09-02 17:16:46,420 - INFO - RSP/SPY ratio skipped (requires Close_RSP and Close_SPY).

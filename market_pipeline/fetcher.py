@@ -15,7 +15,7 @@ from scripts.logger import get_logger
 
 class DataFetcher:
     """
-    Orchestrates historical and daily market data fetches
+    Orchestrates historical and daily market data2 fetches
     using FmpMarketDataFetcher under the hood.
 
     Responsibilities:
@@ -51,26 +51,31 @@ class DataFetcher:
 
     # -------- Public API --------
 
-    def fetch_historical(self) -> None:
-        """Fetch full history and write to market CSV."""
+    def fetch_historical(self) -> bool:
+        """Fetch full history and write to market CSV. Returns True if wrote data."""
         start = self.cfg.historical_start
         end = self.cfg.historical_end
-        self.logger.info(f"🔄 Fetching historical market data: {start} → {end}")
+        self.logger.info(f"Fetching historical market data: {start} → {end}")
 
         df = self._fmp.fetch_all(start, end)
         if df.empty:
             self.logger.warning("No data retrieved for historical fetch.")
-            return
+            return False
 
         df = self._restrict_to_valid_days(df, start, end)
-        self._write_market_csv(df)
-        self.logger.info(f"✅ Historical saved: {len(df)} rows → {self.cfg.market_path}")
+        if df.empty:
+            self.logger.warning("No valid trading days in historical fetch window.")
+            return False
 
-    def fetch_daily(self) -> None:
-        """Fetch new rows since last date in market CSV, append, and save."""
+        self._write_market_csv(df)
+        self.logger.info(f"Historical saved: {len(df)} rows → {self.cfg.market_path}")
+        return True
+
+    def fetch_daily(self) -> bool:
+        """Fetch new rows since last date; append; save. Returns True if new rows appended."""
         if not os.path.exists(self.cfg.market_path):
             self.logger.error(f"{self.cfg.market_path!r} not found; run fetch_historical() first.")
-            return
+            return False
 
         df_existing = pd.read_csv(self.cfg.market_path, parse_dates=["Date"]).sort_values("Date")
         last_date = df_existing["Date"].max()
@@ -78,27 +83,35 @@ class DataFetcher:
         today = pd.to_datetime(date.today())
 
         if next_date > today:
-            self.logger.info(f"⏸ No new trading days (last={last_date.date()}, today={today.date()})")
-            return
+            self.logger.info(f"No new trading days (last={last_date.date()}, today={today.date()})")
+            return False
 
         start = next_date.strftime("%Y-%m-%d")
         end = today.strftime("%Y-%m-%d")
-        self.logger.info(f"🔄 Fetching daily market data: {start} → {end}")
+        self.logger.info(f"Fetching daily market data: {start} → {end}")
 
         df_new = self._fmp.fetch_all(start, end)
         if df_new.empty:
-            self.logger.info("✅ No new rows returned by FMP API.")
-            return
+            self.logger.info("No new rows returned by FMP API.")
+            return False
 
         df_new = self._restrict_to_valid_days(df_new, start, end)
+        if df_new.empty:
+            self.logger.info("New rows were outside valid trading days.")
+            return False
 
         df_out = (
             pd.concat([df_existing, df_new], ignore_index=True)
               .drop_duplicates(subset=["Date"], keep="last")
               .sort_values("Date")
         )
+        if len(df_out) == len(df_existing):
+            self.logger.info("No net new rows after de-duplication.")
+            return False
+
         df_out.to_csv(self.cfg.market_path, index=False)
-        self.logger.info(f"✅ Daily append complete: +{len(df_new)} rows → {self.cfg.market_path}")
+        self.logger.info(f"Daily append complete: +{len(df_out) - len(df_existing)} rows → {self.cfg.market_path}")
+        return True
 
     # -------- Internals --------
 

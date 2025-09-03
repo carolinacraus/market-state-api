@@ -1,0 +1,84 @@
+# config/market_states.yaml
+# Mirrors scripts/run_pg_prod.py settings and logic:
+# - Euclidean state profiles
+# - VIX percentile gate (lookback=260, pct_th=0.75)
+# - Volatile Chop post-split (Rise/Drop) using MA20 slope with N-of-N persistence
+# - Additional rule knobs used by your classifier (fallback distance, stickiness, etc.)
+
+system:
+  name: Euclidean_Persistance_VolSplit
+
+profiles:  # STATE_PROFILES in run_pg_prod.py
+  Steady Climb:    [ 1.0,  1.0,  1.0,  0.25]
+  Trend Pullback:  [-1.0,  1.0,  0.0,  0.00]
+  Orderly Decline: [-1.0, -1.0,  0.0, -0.25]
+  Volatile Chop:   [ 0.0,  0.0, -1.0,  0.00]
+
+scores:
+  # How raw indicators are converted into discrete scores (-1, 0, +1)
+  trend:
+    # from 5d_pct_SP500
+    up_threshold: 0.5
+    down_threshold: -0.5
+  momentum:
+    # from RSI_14_SP500
+    high_rsi: 60
+    low_rsi: 40
+  volatility:
+    # uses Close_VIX, Normalized_ATR, BBW
+    vix:
+      low: 16
+      high: 25
+    atr:
+      low: 0.01
+      high: 0.015
+    bbw:
+      low: 3.0
+      high: 5.0
+  breadth:
+    # avg_breadth = (NYMO/100) + (NYAD/2.0)
+    divisors:
+      nymo: 100.0
+      nyad: 2.0
+    threshold:
+      up: 0.5
+      down: -0.5
+    scale_in_distance: 0.25   # the 0.25 multiplier inside the Euclidean vector
+
+gates:
+  vix_percentile:
+    lookback: 260          # LOOKBACK
+    pct_threshold: 0.75    # PCT_TH (for allowing Volatile Chop)
+
+constraints:
+  trend_pullback:
+    required_previous_state: Steady Climb
+    price_dip_threshold: -1.0     # 5d_pct_SP500 <= -1.0
+    below_ma_ok: true             # also allow if Price_vs_MA < 0
+
+fallbacks:
+  # If the best Euclidean distance is too large, fallback to Chop
+  far_distance_to_chop: 2.0
+
+stickiness:
+  # If best new state isn't sufficiently better than last state by this margin, keep last state
+  delta_threshold: 0.5
+
+chop_split:
+  # After classifying Volatile Chop, split into Rise/Drop using a slope column with persistence-days
+  slope_candidates: ["MA20_Slope", "20d_slope_SP500", "20d_slope_^GSPC", "MA_slope", "MA"]
+  rise_threshold: 1.0
+  drop_threshold: -1.0
+  persistence_days: 5
+
+plotting:
+  # Optional helpers if you generate PDFs/plots from config
+  figsize_pdf: [11, 8.5]    # landscape
+  legend_anchor: [0.985, 0.06]
+  state_colors:
+    Steady Climb:    "lime"
+    Trend Pullback:  "yellow"
+    Orderly Decline: "blue"
+    Volatile Chop:   "orange"
+    Volatile Rise:   "pink"
+    Volatile Drop:   "purple"

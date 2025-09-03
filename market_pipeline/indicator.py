@@ -28,12 +28,21 @@ class IndicatorCalculator:
         slope_window: int = 20,
         sma_window: int = 3,
         bbw_window: int = 20,
-    ) -> None:
+    ) -> bool:
         """
         Compute indicators from cfg.market_path → cfg.indicator_path.
-        Tunable windows are exposed as kwargs for experiments.
+        Returns True if the output file changed.
         """
-        self.logger.info("▶ Running IndicatorCalculator")
+        self.logger.info("Running IndicatorCalculator")
+        # load old for compare (if exists)
+        old = None
+        if os.path.exists(self.cfg.indicator_path):
+            try:
+                old = pd.read_csv(self.cfg.indicator_path, nrows=5)  # light touch
+            except Exception:
+                old = None
+
+        from scripts.calculate_indicators import calculate_all_indicators
         calculate_all_indicators(
             self.cfg.market_path,
             self.cfg.indicator_path,
@@ -44,4 +53,17 @@ class IndicatorCalculator:
             sma_window=sma_window,
             bbw_window=bbw_window,
         )
-        self.logger.info(f"✅ Indicators written to {self.cfg.indicator_path}")
+
+        # naïve change check: file exists and (size or header) changed
+        try:
+            if not os.path.exists(self.cfg.indicator_path):
+                return False
+            new_size = os.path.getsize(self.cfg.indicator_path)
+            if new_size == 0:
+                return False
+            if old is None:
+                return True
+            new_head = pd.read_csv(self.cfg.indicator_path, nrows=5)
+            return list(new_head.columns) != list(old.columns) or len(new_head) != len(old)
+        except Exception:
+            return True

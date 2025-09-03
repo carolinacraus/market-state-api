@@ -37,7 +37,7 @@ class PipelineConfig:
     """
 
     # Directories
-    data_dir: str = field(default_factory=lambda: os.getenv("DATA_DIR", str(BASE_DIR / "data")))
+    data_dir: str = field(default_factory=lambda: os.getenv("DATA_DIR", str(BASE_DIR / "data2")))
     logs_dir: str = field(default_factory=lambda: os.getenv("LOGS_DIR", str(BASE_DIR / "logs")))
     repo: str = field(default_factory=lambda: os.getenv("GITHUB_REPO", "carolinacraus/market-state-api"))
 

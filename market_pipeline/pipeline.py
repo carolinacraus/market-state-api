@@ -13,17 +13,17 @@ from scripts.logger import get_logger
 
 class DataPipeline:
     """
-    High-level orchestration for the data pipeline.
+    High-level orchestration for the data2 pipeline.
 
     Historical:
-      - Fetch full market data
+      - Fetch full market data2
       - Fetch full breadth
       - Merge breadth → market
       - Calculate indicators
       - Merge indicators → market
 
     Daily:
-      - Fetch incremental market data
+      - Fetch incremental market data2
       - Fetch incremental breadth
       - Merge breadth → market
       - Calculate indicators
@@ -41,45 +41,72 @@ class DataPipeline:
 
     # ---------- Public API ----------
 
+    def _upload_changed(self, changed_paths: list[str], mode_label: str) -> None:
+        """Upload only the files that changed."""
+        if not changed_paths:
+            self.logger.info("No file changes detected; skipping GitHub upload.")
+            return
+        repo = os.getenv("GITHUB_REPO", self.cfg.repo)
+        branch = os.getenv("GITHUB_BRANCH")  # optional; default repo default branch
+        stamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")
+        prefix = os.getenv("COMMIT_PREFIX", "Pipeline")
+        for local in changed_paths:
+            if not os.path.exists(local):
+                continue
+            remote = f"data/{os.path.basename(local)}"
+            msg = f"{prefix}: {mode_label} update @ {stamp}"
+            ok, ref, changed = upload_if_changed(local, repo, remote, msg, branch=branch)
+            if ok and changed:
+                self.logger.info(f"Uploaded {remote} (ref={ref[:7] if ref else ''})")
+            elif ok:
+                self.logger.info(f"No change for {remote}; not uploaded.")
+            else:
+                self.logger.error(f"Upload failed for {remote}: {ref}")
+
     def run_historical(self) -> None:
-        """Run a full historical build from scratch."""
-        self.logger.info("🚀 Starting historical pipeline")
+        self.logger.info("Starting historical pipeline")
+        changed = []
 
-        # 1) Market data (full)
-        self.fetcher.fetch_historical()
+        if self.fetcher.fetch_historical():
+            changed.append(self.cfg.market_path)
 
-        # 2) Breadth (full) + merge → market
         self.breadth.historical()
-        self._merge_into_market(self.cfg.breadth_path)
+        if CsvMerger(self.cfg.market_path, self.cfg.breadth_path, logger=self.logger).merge():
+            changed.append(self.cfg.market_path)
 
-        # 3) Indicators + merge → market
-        self.ind_calc.run()
-        self._merge_into_market(self.cfg.indicator_path)
+        if self.ind_calc.run():
+            if CsvMerger(self.cfg.market_path, self.cfg.indicator_path, logger=self.logger).merge():
+                changed.append(self.cfg.market_path)
+            changed.append(self.cfg.indicator_path)
 
-        self.logger.info("✅ Historical pipeline complete")
+        # Always consider breadth file potentially new after historical
+        if os.path.exists(self.cfg.breadth_path):
+            changed.append(self.cfg.breadth_path)
+
+        self._upload_changed(sorted(set(changed)), "historical")
+        self.logger.info("Historical pipeline complete")
 
     def run_daily(self) -> None:
-        """Run a daily increment-only update."""
-        self.logger.info("⏳ Starting daily pipeline")
+        self.logger.info("Starting daily pipeline")
+        changed = []
 
-        if not os.path.exists(self.cfg.market_path):
-            self.logger.error(
-                f"{self.cfg.market_path!r} not found; run historical pipeline first."
-            )
-            return
+        if self.fetcher.fetch_daily():
+            changed.append(self.cfg.market_path)
 
-        # 1) Market data (incremental)
-        self.fetcher.fetch_daily()
-
-        # 2) Breadth (incremental) + merge → market
         self.breadth.daily()
-        self._merge_into_market(self.cfg.breadth_path)
+        if CsvMerger(self.cfg.market_path, self.cfg.breadth_path, logger=self.logger).merge():
+            changed.append(self.cfg.market_path)
+        if os.path.exists(self.cfg.breadth_path):
+            changed.append(self.cfg.breadth_path)
 
-        # 3) Indicators + merge → market
-        self.ind_calc.run()
-        self._merge_into_market(self.cfg.indicator_path)
+        if self.ind_calc.run():
+            if CsvMerger(self.cfg.market_path, self.cfg.indicator_path, logger=self.logger).merge():
+                changed.append(self.cfg.market_path)
+            if os.path.exists(self.cfg.indicator_path):
+                changed.append(self.cfg.indicator_path)
 
-        self.logger.info("✅ Daily pipeline complete")
+        self._upload_changed(sorted(set(changed)), "daily")
+        self.logger.info("Daily pipeline complete")
 
     def run_once(self) -> None:
         """

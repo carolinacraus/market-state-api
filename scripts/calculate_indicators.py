@@ -41,7 +41,7 @@ def calculate_all_indicators(
 
     df = _load_csv(input_path, log)
     if df.empty:
-        log.warning("No data to process. Aborting indicator pipeline.")
+        log.warning("No data2 to process. Aborting indicator pipeline.")
         return
 
     log.info("Calculating indicators…")
@@ -191,9 +191,7 @@ def _calc_bbw(df: pd.DataFrame, *, price_col: str, window: int) -> pd.DataFrame:
 # Optional CLI for local runs --------------------------------------------------
 
 if __name__ == "__main__":
-    # Minimal local run helper (kept simple for dev convenience)
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(base_dir, "data")
-    input_path = os.path.join(data_dir, "MarketStates_Data.csv")
-    output_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
-    calculate_all_indicators(input_path, output_path)
+    from market_pipeline.config import PipelineConfig
+
+    cfg = PipelineConfig.from_env()
+    calculate_all_indicators(cfg.market_path, cfg.indicator_path)

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 from DataRetrieval_FMP import fetch_all_tickers, get_valid_trading_days, TICKER_MAP
-from MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data, merge_with_market_data
+from JulyBuild.MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data, merge_with_market_data
 from calculate_indicators import calculate_all_indicators
 from scoring_Euclidean import classify_market_states_system_a, append_to_txt_logs_system_a
 from scoring_Original import classify_market_states_system_b, append_to_txt_logs_system_b
@@ -16,7 +16,7 @@ def run_historical_pipeline():
     load_dotenv()
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
+    data_dir = os.path.abspath(os.path.join(base_dir, "..", "data2"))
 
     market_path = os.path.join(data_dir, "MarketStates_Data.csv")
     indicator_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
@@ -36,7 +36,7 @@ def run_historical_pipeline():
         df_market.to_csv(market_path, index=False)
         logger.info(f"Saved {len(df_market)} rows to MarketStates_Data.csv")
     except Exception as e:
-        logger.error(f"[FMP] Failed to retrieve historical market data: {e}")
+        logger.error(f"[FMP] Failed to retrieve historical market data2: {e}")
         return
 
     try:

@@ -5,7 +5,7 @@ import os
 # === Config ===
 system_name = "Euclidean"
 threshold = 0.5  # distance delta threshold to flag borderline cases
-data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
+data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data2"))
 input_path = os.path.join(data_dir, f"MarketData_with_States_System_{system_name}.csv")
 output_path = os.path.join(data_dir, f"Borderline_States_{system_name}.csv")
 
@@ -18,7 +18,7 @@ state_profiles = {
     "Volatile Chop": [0, 0, -2],
 }
 
-# === Load the data ===
+# === Load the data2 ===
 df = pd.read_csv(input_path, parse_dates=["Date"])
 df = df.dropna(subset=["Date"])
 df["Date"] = pd.to_datetime(df["Date"]).dt.normalize()

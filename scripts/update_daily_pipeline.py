@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import sys
 
 from DataRetrieval_FMP import fetch_all_tickers, get_valid_trading_days, TICKER_MAP
-from MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data, merge_with_market_data
+from JulyBuild.MarketBreadth_SQL import gather_market_breadth_data, reformat_breadth_data, merge_with_market_data
 from calculate_indicators import calculate_all_indicators
 from logger import get_logger
 from scripts.old_scoring_systems.classify_markets import classify_market_states
@@ -22,7 +22,7 @@ def update_pipeline(start_date=None, end_date=None):
     load_dotenv()
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(base_dir, "data")
+    data_dir = os.path.join(base_dir, "data2")
 
     market_path = os.path.join(data_dir, "MarketStates_Data.csv")
     indicator_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
@@ -30,7 +30,7 @@ def update_pipeline(start_date=None, end_date=None):
 
     logger.info(f"Starting pipeline with start_date={start_date}, end_date={end_date}")
 
-    # Step 1: Load and update market data
+    # Step 1: Load and update market data2
     try:
         if not os.path.exists(market_path):
             logger.error("MarketStates_Data.csv not found. Run initial build first.")
@@ -42,11 +42,11 @@ def update_pipeline(start_date=None, end_date=None):
         last_date = df_existing["Date"].max()
         start_date = start_date or (last_date + timedelta(days=1)).strftime("%Y-%m-%d")
         end_date = end_date or datetime.today().strftime("%Y-%m-%d")
-        logger.info(f"Fetching FMP market data from {start_date} to {end_date}")
+        logger.info(f"Fetching FMP market data2 from {start_date} to {end_date}")
 
         df_new = fetch_all_tickers(list(TICKER_MAP.keys()), start_date, end_date)
         if df_new is None or df_new.empty:
-            logger.info("No new FMP data available.")
+            logger.info("No new FMP data2 available.")
             return
 
         valid_days = get_valid_trading_days(start_date, end_date)
@@ -63,7 +63,7 @@ def update_pipeline(start_date=None, end_date=None):
 
     # Step 2: Market breadth SQL and merge
     try:
-        logger.info("Gathering market breadth data from SQL")
+        logger.info("Gathering market breadth data2 from SQL")
         gather_market_breadth_data()
         reformat_breadth_data()
         merge_with_market_data()

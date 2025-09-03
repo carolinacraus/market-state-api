@@ -3,8 +3,7 @@ import pandas as pd
 import numpy as np
 import logging
 import sys
-from logger import get_logger
-from github_upload import upload_to_github
+from JulyBuild.github_upload import upload_to_github
 
 system_name = "Euclidean"
 
@@ -109,7 +108,7 @@ if __name__ == "__main__":
         logger.info(f">>> Starting System {system_name} classification")
 
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
+        data_dir = os.path.abspath(os.path.join(base_dir, "..", "data2"))
         os.makedirs(data_dir, exist_ok=True)
 
         input_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
@@ -136,7 +135,7 @@ if __name__ == "__main__":
         upload_to_github(
             file_path=os.path.join(data_dir, f"Borderline_States_{system_name}.csv"),
             repo="carolinacraus/market-state-api",
-            path_in_repo=f"data/Borderline_States_{system_name}.csv",
+            path_in_repo=f"../JulyBuild/data2/Borderline_States_{system_name}.csv",
             commit_message="🧠 Export borderline states for GPT comparison",
             branch="main"
         )

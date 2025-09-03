@@ -3,8 +3,7 @@ import pandas as pd
 import numpy as np
 import logging
 import sys
-from logger import get_logger
-from github_upload import upload_to_github  # ✅ New import
+from JulyBuild.github_upload import upload_to_github  # ✅ New import
 
 # ========== Configurable System Name ==========
 system_name = "Original"  # 🔁 Set this to customize file naming
@@ -148,7 +147,7 @@ if __name__ == "__main__":
     try:
         logger.info(f">>> Starting System {system_name} classification")
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
+        data_dir = os.path.abspath(os.path.join(base_dir, "..", "data2"))
         input_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
         output_path = os.path.join(data_dir, f"MarketData_with_States_System_{system_name}.csv")
 
@@ -161,7 +160,7 @@ if __name__ == "__main__":
         upload_to_github(
             file_path=output_path,
             repo="carolinacraus/market-state-api",
-            path_in_repo=f"data/MarketData_with_States_System_{system_name}.csv",
+            path_in_repo=f"../JulyBuild/data2/MarketData_with_States_System_{system_name}.csv",
             commit_message=f"Daily update: market states system {system_name}"
         )
 
@@ -170,7 +169,7 @@ if __name__ == "__main__":
         upload_to_github(
             file_path=txt_path,
             repo="carolinacraus/market-state-api",
-            path_in_repo=f"data/MarketStates_System_{system_name}.txt",
+            path_in_repo=f"../JulyBuild/data2/MarketStates_System_{system_name}.txt",
             commit_message=f"Daily update: market states log system {system_name}"
         )
 
@@ -179,7 +178,7 @@ if __name__ == "__main__":
         upload_to_github(
             file_path=diag_path,
             repo="carolinacraus/market-state-api",
-            path_in_repo=f"data/MarketStates_Diagnostics_System_{system_name}.txt",
+            path_in_repo=f"../JulyBuild/data2/MarketStates_Diagnostics_System_{system_name}.txt",
             commit_message=f"Daily update: diagnostics system {system_name}"
         )
 

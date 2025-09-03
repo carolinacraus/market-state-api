@@ -30,9 +30,9 @@ def upload_market_state_to_api(system_name: str) -> dict:
 
     list_id = list_id_map[system_name]
 
-    # === Resolve file path (../data/<file>) ===
+    # === Resolve file path (../data2/<file>) ===
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
+    data_dir = os.path.abspath(os.path.join(base_dir, "..", "data2"))
     filepath = os.path.join(data_dir, file_map[system_name])
     logger.info(f"📄 Resolved file path: {filepath}")
 
@@ -52,8 +52,8 @@ def upload_market_state_to_api(system_name: str) -> dict:
         response.raise_for_status()
         existing_data = response.json()
     except Exception as e:
-        logger.exception("❌ Failed to fetch existing data from API")
-        return {"error": f"Failed to fetch existing data: {str(e)}"}
+        logger.exception("❌ Failed to fetch existing data2 from API")
+        return {"error": f"Failed to fetch existing data2: {str(e)}"}
 
     latest_date = pd.to_datetime("1900-01-01")
     if existing_data:

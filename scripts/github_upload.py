@@ -1,81 +1,100 @@
-# github_uploader.py
+# scripts/github_upload.py
+from __future__ import annotations
 
 import base64
-import requests
+import json
 import os
-from datetime import datetime
+from typing import Tuple, Optional
 
-def upload_to_github(file_path, repo, path_in_repo, commit_message, branch="main"):
+import requests
+from scripts.logger import get_logger
+
+logger = get_logger("github_upload")
+
+
+def _gh_headers() -> dict:
     token = os.getenv("GITHUB_TOKEN")
     if not token:
-        raise ValueError("Missing GITHUB_TOKEN environment variable")
-
-    owner, repo_name = repo.split("/")
-    api_url = f"https://api.github.com/repos/{owner}/{repo_name}/contents/{path_in_repo}"
-
-    # Read file content and encode
-    with open(file_path, "rb") as f:
-        content = f.read()
-    encoded = base64.b64encode(content).decode("utf-8")
-
-    # Prepare headers and check if file exists
-    headers = {"Authorization": f"token {token}"}
-    r = requests.get(api_url, headers=headers)
-    sha = r.json().get("sha") if r.status_code == 200 else None
-
-    # Construct upload payload
-    data = {
-        "message": commit_message,
-        "content": encoded,
-        "branch": branch
+        raise RuntimeError("GITHUB_TOKEN is required to upload to GitHub")
+    return {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {token}",
+        "X-GitHub-Api-Version": "2022-11-28",
     }
-    if sha:
-        data["sha"] = sha  # Required for overwrites
 
-    # Upload via PUT request
-    r = requests.put(api_url, headers=headers, json=data)
-    if r.status_code in [200, 201]:
-        print(f"Uploaded {file_path} to GitHub at {path_in_repo}")
-        return r.json().get("commit", {}).get("sha")
-    else:
-        print(f"GitHub upload failed for {file_path}: {r.status_code} - {r.text}")
+
+def _get_contents(repo: str, path_in_repo: str, ref: Optional[str] = None) -> dict | None:
+    url = f"https://api.github.com/repos/{repo}/contents/{path_in_repo}"
+    params = {"ref": ref} if ref else None
+    r = requests.get(url, headers=_gh_headers(), params=params, timeout=30)
+    if r.status_code == 200:
+        return r.json()
+    if r.status_code == 404:
         return None
+    r.raise_for_status()
 
-def create_github_tag(repo, tag_name, tag_message, commit_sha, branch="main"):
-    token = os.getenv("GITHUB_TOKEN")
-    if not token:
-        raise ValueError("Missing GITHUB_TOKEN environment variable")
 
-    owner, repo_name = repo.split("/")
-    api_url = f"https://api.github.com/repos/{owner}/{repo_name}/git/tags"
+def upload_to_github(
+    file_path: str,
+    repo: str,
+    path_in_repo: str,
+    commit_message: str,
+    branch: str | None = None,
+) -> Tuple[bool, str]:
+    """Create or update a single file in a GitHub repo. Returns (ok, sha_or_error)."""
+    try:
+        with open(file_path, "rb") as f:
+            content_b64 = base64.b64encode(f.read()).decode("utf-8")
+    except Exception as e:
+        logger.error(f"Failed to read file {file_path}: {e}")
+        return False, str(e)
 
-    headers = {"Authorization": f"token {token}"}
+    payload = {"message": commit_message, "content": content_b64}
+    if branch:
+        payload["branch"] = branch
 
-    tag_data = {
-        "tag": tag_name,
-        "message": tag_message,
-        "object": commit_sha,
-        "type": "commit",
-        "tagger": {
-            "name": "Market State Bot",
-            "email": "bot@nirvana.com",
-            "date": datetime.utcnow().isoformat() + "Z"
-        }
-    }
+    existing = _get_contents(repo, path_in_repo, ref=branch)
+    if existing and "sha" in existing:
+        payload["sha"] = existing["sha"]
 
-    tag_response = requests.post(api_url, headers=headers, json=tag_data)
-    if tag_response.status_code not in [201]:
-        print(f"Failed to create tag: {tag_response.status_code} - {tag_response.text}")
-        return
-
-    # Link tag to the refs
-    ref_url = f"https://api.github.com/repos/{owner}/{repo_name}/git/refs"
-    ref_data = {
-        "ref": f"refs/tags/{tag_name}",
-        "sha": tag_response.json()["sha"]
-    }
-    ref_response = requests.post(ref_url, headers=headers, json=ref_data)
-    if ref_response.status_code not in [201]:
-        print(f"Failed to create tag ref: {ref_response.status_code} - {ref_response.text}")
+    url = f"https://api.github.com/repos/{repo}/contents/{path_in_repo}"
+    r = requests.put(url, headers=_gh_headers(), data=json.dumps(payload), timeout=60)
+    if r.status_code in (200, 201):
+        sha = (r.json().get("content") or {}).get("sha", "")
+        logger.info(f"Uploaded {path_in_repo} to {repo} (sha={sha[:7]})")
+        return True, sha or ""
     else:
-        print(f"🏷Created tag {tag_name} pointing to commit {commit_sha}")
+        logger.error(f"GitHub upload failed: {r.status_code} {r.text}")
+        return False, f"{r.status_code} {r.text}"
+
+
+def upload_if_changed(
+    file_path: str,
+    repo: str,
+    path_in_repo: str,
+    commit_message: str,
+    branch: str | None = None,
+) -> Tuple[bool, str, bool]:
+    """
+    Upload only if remote content differs. Returns (ok, sha_or_err, changed).
+    """
+    # If remote missing, upload.
+    existing = _get_contents(repo, path_in_repo, ref=branch)
+    if not existing:
+        ok, sha = upload_to_github(file_path, repo, path_in_repo, commit_message, branch)
+        return ok, sha, True
+
+    # Compare decoded contents to avoid unnecessary commits
+    try:
+        remote_b64 = existing.get("content", "")
+        remote_bytes = base64.b64decode(remote_b64.encode("utf-8"))
+        with open(file_path, "rb") as f:
+            local_bytes = f.read()
+        if local_bytes == remote_bytes:
+            logger.info(f"No change detected for {path_in_repo}; skipping upload.")
+            return True, existing.get("sha", ""), False
+    except Exception as e:
+        logger.warning(f"Content compare failed for {path_in_repo}; uploading anyway. {e}")
+
+    ok, sha = upload_to_github(file_path, repo, path_in_repo, commit_message, branch)
+    return ok, sha, True

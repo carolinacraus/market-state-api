@@ -29,7 +29,7 @@ class FmpMarketDataFetcher:
         )
 
     def fetch_ticker(self, ticker: str, start_date: str, end_date: str) -> pd.DataFrame | None:
-        self.logger.info(f"Fetching data for {ticker}")
+        self.logger.info(f"Fetching data2 for {ticker}")
         try:
             resp = requests.get(self._build_url(ticker, start_date, end_date))
             resp.raise_for_status()
@@ -40,7 +40,7 @@ class FmpMarketDataFetcher:
         payload = resp.json()
         hist = payload.get("historical")
         if not hist:
-            self.logger.warning(f"No historical data for {ticker}")
+            self.logger.warning(f"No historical data2 for {ticker}")
             return None
 
         df = pd.DataFrame(hist)
@@ -59,12 +59,12 @@ class FmpMarketDataFetcher:
             df = self.fetch_ticker(ticker, start_date, end_date)
             if df is not None:
                 merged = df if merged is None else merged.merge(df, on="Date", how="outer")
-        return merged or pd.DataFrame()
-
+        # Explicitly handle the None case:
+        return merged if merged is not None else pd.DataFrame()
 
 def main():
     load_dotenv()
-    config = PipelineConfig()
+    config = PipelineConfig.from_env()   # use env + standard dirs
     logger = get_logger("fmp_data")
     api_key = os.getenv("FMP_API_KEY")
 
@@ -72,7 +72,7 @@ def main():
         logger.error("Missing FMP_API_KEY in environment")
         return
 
-    parser = argparse.ArgumentParser(description="Fetch historical market data from FMP")
+    parser = argparse.ArgumentParser(description="Fetch historical market data2 from FMP")
     parser.add_argument("--start", required=True, help="YYYY-MM-DD")
     parser.add_argument("--end",   required=True, help="YYYY-MM-DD")
     args = parser.parse_args()
@@ -80,16 +80,17 @@ def main():
     fetcher = FmpMarketDataFetcher(api_key, config.ticker_map, logger)
     df = fetcher.fetch_all(args.start, args.end)
     if df.empty:
-        logger.warning("No data retrieved; exiting.")
+        logger.warning("No data2 retrieved; exiting.")
         return
 
     valid_days = fetcher.get_valid_trading_days(args.start, args.end)
     df = df[df["Date"].isin(valid_days)].sort_values("Date")
 
-    os.makedirs(config.data_dir, exist_ok=True)
-    out_path = os.path.join(config.data_dir, config.market_file)
+    config.ensure_dirs()                 # ensures <repo_root>/data2 exists
+    out_path = config.market_path        # <-- always <repo_root>/data2/MarketStates_Data.csv
     df.to_csv(out_path, index=False)
-    logger.info(f"✅ Saved market data to {out_path}")
+    logger.info(f"✅ Saved market data2 to {out_path}")
+
 
 
 if __name__ == "__main__":
