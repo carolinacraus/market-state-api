@@ -2,97 +2,128 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime
-from flask import Flask, jsonify, request
+from datetime import datetime, timedelta
+
+from flask import Flask, jsonify, request, send_file
+import pandas as pd
 
 from market_pipeline.config import PipelineConfig
-from market_pipeline.pipeline import DataPipeline
+from market_pipeline.pipeline import DataPipeline  # your orchestrator
 from scripts.logger import get_logger
-from scripts.github_upload import upload_to_github  # provided below
 
 app = Flask(__name__)
-logger = get_logger("flask_api")
+logger = get_logger("flask_app_noauth")
 
-# Simple header-based auth
-API_KEY = os.getenv("RAILWAY_TOKEN")  # set in Railway env
-
-
-def _require_key():
-    key = request.headers.get("X-API-Key")
-    if not API_KEY or key != API_KEY:
-        return jsonify({"ok": False, "error": "Unauthorized"}), 401
-    return None
-
-
-def _run_and_upload(which: str):
+# === helpers ===
+def _cfg() -> PipelineConfig:
     cfg = PipelineConfig.from_env()
-    pipe = DataPipeline(cfg=cfg, logger=logger)
+    cfg.ensure_dirs()
+    return cfg
 
-    if which == "historical":
-        pipe.run_historical()
-    elif which == "daily":
-        pipe.run_daily()
-    elif which == "auto":
-        pipe.run_once()
-    else:
-        return {"ok": False, "error": f"Unknown mode {which}"}
+def _pipe(logger=logger) -> DataPipeline:
+    return DataPipeline(cfg=_cfg(), logger=logger)
 
-    # Upload the three CSVs to GitHub
-    repo = os.getenv("GITHUB_REPO", cfg.repo)
-    commit_prefix = os.getenv("COMMIT_PREFIX", "Pipeline")
-    stamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")
+@app.route("/", methods=["GET"])
+def index():
+    logger.info("Health check hit.")
+    return "Market State API is running (no-auth mode)."
 
-    uploads = []
-    for local_path, remote_path in [
-        (cfg.market_path,    f"data/{os.path.basename(cfg.market_path)}"),
-        (cfg.indicator_path, f"data/{os.path.basename(cfg.indicator_path)}"),
-        (cfg.breadth_path,   f"data/{os.path.basename(cfg.breadth_path)}"),
-    ]:
-        if os.path.exists(local_path):
-            msg = f"{commit_prefix}: {which} run @ {stamp}"
-            ok, sha_or_err = upload_to_github(
-                file_path=local_path,
-                repo=repo,
-                path_in_repo=remote_path,
-                commit_message=msg,
-            )
-            uploads.append({"file": remote_path, "ok": ok, "ref": sha_or_err})
-
-    return {"ok": True, "mode": which, "uploads": uploads}
-
-
-@app.route("/health", methods=["GET"])
-def health():
-    return jsonify({"ok": True, "service": "market-state-api"})
-
+# ----------------- pipeline endpoints -----------------
 
 @app.route("/run-historical", methods=["POST"])
 def run_historical():
-    if (resp := _require_key()) is not None:
-        return resp
-    out = _run_and_upload("historical")
-    code = 200 if out.get("ok") else 500
-    return jsonify(out), code
-
+    """Force full historical run (no auth)."""
+    try:
+        _pipe().run_historical()
+        return jsonify({"ok": True, "mode": "historical"}), 200
+    except Exception as e:
+        logger.error(f"Historical failed: {e}", exc_info=True)
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 @app.route("/run-daily", methods=["POST"])
 def run_daily():
-    if (resp := _require_key()) is not None:
-        return resp
-    out = _run_and_upload("daily")
-    code = 200 if out.get("ok") else 500
-    return jsonify(out), code
-
+    """Daily run only."""
+    try:
+        pipe = _pipe()
+        # If market file missing, mirror old behavior: do historical first.
+        if not os.path.exists(pipe.cfg.market_path):
+            logger.info("MarketStates_Data.csv not found → running historical first.")
+            pipe.run_historical()
+        else:
+            pipe.run_daily()
+        return jsonify({"ok": True, "mode": "daily"}), 200
+    except Exception as e:
+        logger.error(f"Daily failed: {e}", exc_info=True)
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 @app.route("/run-pipeline", methods=["POST"])
 def run_pipeline():
-    if (resp := _require_key()) is not None:
-        return resp
-    out = _run_and_upload("auto")
-    code = 200 if out.get("ok") else 500
-    return jsonify(out), code
+    """Auto: historical if missing, otherwise daily."""
+    try:
+        _pipe().run_once()
+        return jsonify({"ok": True, "mode": "auto"}), 200
+    except Exception as e:
+        logger.error(f"Pipeline failed: {e}", exc_info=True)
+        return jsonify({"ok": False, "error": str(e)}), 500
 
+# ----------------- downloads (use config paths, not data2/) -----------------
+
+@app.route("/download/market", methods=["GET"])
+def download_market():
+    cfg = _cfg()
+    if not os.path.exists(cfg.market_path):
+        return jsonify({"ok": False, "error": "MarketStates_Data.csv not found"}), 404
+    return send_file(cfg.market_path, as_attachment=True)
+
+@app.route("/download/indicators", methods=["GET"])
+def download_indicators():
+    cfg = _cfg()
+    if not os.path.exists(cfg.indicator_path):
+        return jsonify({"ok": False, "error": "MarketData_with_Indicators.csv not found"}), 404
+    return send_file(cfg.indicator_path, as_attachment=True)
+
+@app.route("/download/breadth", methods=["GET"])
+def download_breadth():
+    cfg = _cfg()
+    if not os.path.exists(cfg.breadth_path):
+        return jsonify({"ok": False, "error": "market_breadth.csv not found"}), 404
+    return send_file(cfg.breadth_path, as_attachment=True)
+
+# ----------------- optional: date-window run, like your old fetch endpoint -----------------
+
+@app.route("/fetch-market-data", methods=["POST"])
+def fetch_market_data():
+    """
+    Optional: run just the market-data historical fetch for a custom window.
+    Uses the configured fetcher; writes to cfg.market_path.
+    """
+    try:
+        from scripts.DataRetrieval_FMP import FmpMarketDataFetcher
+        from pandas_market_calendars import get_calendar
+        from dotenv import load_dotenv
+
+        load_dotenv()
+        cfg = _cfg()
+        start_date = request.json.get("start_date", "2005-01-01")
+        end_date = request.json.get("end_date") or datetime.today().strftime("%Y-%m-%d")
+        api_key = os.getenv("FMP_API_KEY")
+        if not api_key:
+            return jsonify({"ok": False, "error": "Missing FMP_API_KEY"}), 500
+
+        fetcher = FmpMarketDataFetcher(api_key, cfg.ticker_map, logger)
+        df = fetcher.fetch_all(start_date, end_date)
+        if df.empty:
+            return jsonify({"ok": False, "error": "No data returned by FMP"}), 500
+
+        valid = fetcher.get_valid_trading_days(start_date, end_date)
+        df = df[df["Date"].isin(valid)].sort_values("Date")
+        df.to_csv(cfg.market_path, index=False)
+        logger.info(f"Saved market data {start_date}→{end_date} to {cfg.market_path}")
+        return jsonify({"ok": True, "rows": int(len(df))}), 200
+    except Exception as e:
+        logger.error(f"fetch-market-data failed: {e}", exc_info=True)
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 if __name__ == "__main__":
-    # For local dev only. Railway uses its own server.
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "8080")))
+    # Dev server only; Railway will use gunicorn
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))

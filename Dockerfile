@@ -27,8 +27,14 @@ RUN mkdir -p data logs && \
     adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
 
-USER appuser
-EXPOSE 8080
+# Expose Flask port
+EXPOSE 5000
 
-# gunicorn server for Railway
-CMD ["gunicorn", "app:app", "-w", "2", "-k", "gthread", "--threads", "4", "--timeout", "600", "-b", "0.0.0.0:8080"]
+# Start app
+CMD ["python", "app.py"]
+
+# USER appuser
+# EXPOSE 8080
+#
+# # gunicorn server for Railway
+# CMD ["gunicorn", "app:app", "-w", "2", "-k", "gthread", "--threads", "4", "--timeout", "600", "-b", "0.0.0.0:8080"]
