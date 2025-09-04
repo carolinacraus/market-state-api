@@ -147,7 +147,7 @@ if __name__ == "__main__":
     try:
         logger.info(f">>> Starting System {system_name} classification")
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        data_dir = os.path.abspath(os.path.join(base_dir, "..", "data2"))
+        data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
         input_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
         output_path = os.path.join(data_dir, f"MarketData_with_States_System_{system_name}.csv")
 

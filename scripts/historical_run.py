@@ -16,7 +16,7 @@ def run_historical_pipeline():
     load_dotenv()
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.abspath(os.path.join(base_dir, "..", "data2"))
+    data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
 
     market_path = os.path.join(data_dir, "MarketStates_Data.csv")
     indicator_path = os.path.join(data_dir, "MarketData_with_Indicators.csv")
@@ -36,7 +36,7 @@ def run_historical_pipeline():
         df_market.to_csv(market_path, index=False)
         logger.info(f"Saved {len(df_market)} rows to MarketStates_Data.csv")
     except Exception as e:
-        logger.error(f"[FMP] Failed to retrieve historical market data2: {e}")
+        logger.error(f"[FMP] Failed to retrieve historical market data: {e}")
         return
 
     try:

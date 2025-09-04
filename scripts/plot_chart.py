@@ -68,7 +68,7 @@ def plot_market_state_chart(txt_file_path, sp500_path, system_name, year, output
     print(f"Chart saved to: {output_path}")
 
 def analyze_market_state_agreement(year=None):
-    data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data2"))
+    data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
     df_a = pd.read_csv(os.path.join(data_dir, "MarketStates_System_A.txt"), names=["Date", "State_A"])
     df_b = pd.read_csv(os.path.join(data_dir, "MarketStates_System_B.txt"), names=["Date", "State_B"])
     df_a["Date"] = pd.to_datetime(df_a["Date"])
@@ -94,7 +94,7 @@ def analyze_market_state_agreement(year=None):
 
 def generate_state_charts_pdf():
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.abspath(os.path.join(base_dir, "..", "data2"))
+    data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
     sp500_file = os.path.join(data_dir, "MarketStates_Data.csv")
     txt_a = os.path.join(data_dir, "MarketStates_System_A.txt")
     txt_b = os.path.join(data_dir, "MarketStates_System_B.txt")
@@ -126,7 +126,7 @@ def generate_state_charts_pdf():
 if __name__ == "__main__":
     try:
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        data_dir = os.path.abspath(os.path.join(base_dir, "..", "data2"))
+        data_dir = os.path.abspath(os.path.join(base_dir, "..", "data"))
 
         txt_file = sys.argv[1] if len(sys.argv) > 1 else os.path.join(data_dir, "MarketStates_System_A.txt")
         sp500_file = os.path.join(data_dir, "MarketStates_Data.csv")

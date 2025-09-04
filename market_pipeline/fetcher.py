@@ -15,7 +15,7 @@ from scripts.logger import get_logger
 
 class DataFetcher:
     """
-    Orchestrates historical and daily market data2 fetches
+    Orchestrates historical and daily market data fetches
     using FmpMarketDataFetcher under the hood.
 
     Responsibilities:

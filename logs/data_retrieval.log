@@ -112,3 +112,32 @@
 2025-09-02 17:16:43,897 - INFO - Loaded C:\Users\caroc\PycharmProjects\market-state-api\data\MarketStates_Data.csv (5198 rows).
 2025-09-02 17:16:43,897 - INFO - Calculating indicators…
 2025-09-02 17:16:46,420 - INFO - RSP/SPY ratio skipped (requires Close_RSP and Close_SPY).
+2025-09-04 10:56:31,681 - INFO - Starting historical pipeline
+2025-09-04 10:56:31,685 - INFO - Fetching data2 for ^GSPC
+2025-09-04 10:56:32,397 - INFO - Fetching data2 for ^TNX
+2025-09-04 10:56:33,115 - INFO - Fetching data2 for DX-Y.NYB
+2025-09-04 10:56:33,902 - INFO - Fetching data2 for CL=F
+2025-09-04 10:56:34,528 - INFO - Fetching data2 for HG=F
+2025-09-04 10:56:35,151 - INFO - Fetching data2 for GC=F
+2025-09-04 10:56:35,795 - INFO - Fetching data2 for ^VIX
+2025-09-04 10:56:36,403 - INFO - Fetching data2 for RSP
+2025-09-04 10:56:39,432 - INFO - Running IndicatorCalculator
+2025-09-04 10:56:39,496 - INFO - Loaded C:\Users\caroc\PycharmProjects\market-state-api\data2\MarketStates_Data.csv (5200 rows).
+2025-09-04 10:56:39,496 - INFO - Calculating indicators…
+2025-09-04 10:56:44,356 - INFO - RSP/SPY ratio skipped (requires Close_RSP and Close_SPY).
+2025-09-04 10:58:21,358 - INFO - Starting daily pipeline
+2025-09-04 10:58:21,533 - INFO - Fetching data2 for ^GSPC
+2025-09-04 10:58:21,841 - INFO - Fetching data2 for ^TNX
+2025-09-04 10:58:22,104 - INFO - Fetching data2 for DX-Y.NYB
+2025-09-04 10:58:22,368 - INFO - Fetching data2 for CL=F
+2025-09-04 10:58:22,614 - INFO - Fetching data2 for HG=F
+2025-09-04 10:58:22,859 - INFO - Fetching data2 for GC=F
+2025-09-04 10:58:23,100 - INFO - Fetching data2 for ^VIX
+2025-09-04 10:58:23,340 - INFO - Fetching data2 for RSP
+2025-09-04 10:58:24,507 - INFO - Fetching breadth from 2025-09-04…
+2025-09-04 10:58:24,584 - ERROR - JSON decode failed for $NYAD.N. Response head: 
+2025-09-04 10:58:24,638 - ERROR - JSON decode failed for $NYMO.N. Response head: 
+2025-09-04 10:58:25,530 - INFO - Running IndicatorCalculator
+2025-09-04 10:58:25,674 - INFO - Loaded C:\Users\caroc\PycharmProjects\market-state-api\data2\MarketStates_Data.csv (5201 rows).
+2025-09-04 10:58:25,674 - INFO - Calculating indicators…
+2025-09-04 10:58:31,143 - INFO - RSP/SPY ratio skipped (requires Close_RSP and Close_SPY).

@@ -41,7 +41,7 @@ def calculate_all_indicators(
 
     df = _load_csv(input_path, log)
     if df.empty:
-        log.warning("No data2 to process. Aborting indicator pipeline.")
+        log.warning("No data to process. Aborting indicator pipeline.")
         return
 
     log.info("Calculating indicators…")

@@ -29,7 +29,7 @@ class FmpMarketDataFetcher:
         )
 
     def fetch_ticker(self, ticker: str, start_date: str, end_date: str) -> pd.DataFrame | None:
-        self.logger.info(f"Fetching data2 for {ticker}")
+        self.logger.info(f"Fetching data for {ticker}")
         try:
             resp = requests.get(self._build_url(ticker, start_date, end_date))
             resp.raise_for_status()
@@ -40,7 +40,7 @@ class FmpMarketDataFetcher:
         payload = resp.json()
         hist = payload.get("historical")
         if not hist:
-            self.logger.warning(f"No historical data2 for {ticker}")
+            self.logger.warning(f"No historical data for {ticker}")
             return None
 
         df = pd.DataFrame(hist)
@@ -72,7 +72,7 @@ def main():
         logger.error("Missing FMP_API_KEY in environment")
         return
 
-    parser = argparse.ArgumentParser(description="Fetch historical market data2 from FMP")
+    parser = argparse.ArgumentParser(description="Fetch historical market data from FMP")
     parser.add_argument("--start", required=True, help="YYYY-MM-DD")
     parser.add_argument("--end",   required=True, help="YYYY-MM-DD")
     args = parser.parse_args()
@@ -80,16 +80,16 @@ def main():
     fetcher = FmpMarketDataFetcher(api_key, config.ticker_map, logger)
     df = fetcher.fetch_all(args.start, args.end)
     if df.empty:
-        logger.warning("No data2 retrieved; exiting.")
+        logger.warning("No data retrieved; exiting.")
         return
 
     valid_days = fetcher.get_valid_trading_days(args.start, args.end)
     df = df[df["Date"].isin(valid_days)].sort_values("Date")
 
-    config.ensure_dirs()                 # ensures <repo_root>/data2 exists
-    out_path = config.market_path        # <-- always <repo_root>/data2/MarketStates_Data.csv
+    config.ensure_dirs()                 # ensures <repo_root>/data exists
+    out_path = config.market_path        # <-- always <repo_root>/data/MarketStates_Data.csv
     df.to_csv(out_path, index=False)
-    logger.info(f"✅ Saved market data2 to {out_path}")
+    logger.info(f"✅ Saved market data to {out_path}")
 
 
 

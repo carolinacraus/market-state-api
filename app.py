@@ -66,7 +66,7 @@ def run_pipeline():
         logger.error(f"Pipeline failed: {e}", exc_info=True)
         return jsonify({"ok": False, "error": str(e)}), 500
 
-# ----------------- downloads (use config paths, not data2/) -----------------
+# ----------------- downloads (use config paths, not data/) -----------------
 
 @app.route("/download/market", methods=["GET"])
 def download_market():

@@ -9,21 +9,22 @@ from market_pipeline.breadth import MarketBreadthFetcher
 from market_pipeline.merger import CsvMerger
 from market_pipeline.indicator import IndicatorCalculator
 from scripts.logger import get_logger
+from datetime import datetime
 
 
 class DataPipeline:
     """
-    High-level orchestration for the data2 pipeline.
+    High-level orchestration for the data pipeline.
 
     Historical:
-      - Fetch full market data2
+      - Fetch full market data
       - Fetch full breadth
       - Merge breadth → market
       - Calculate indicators
       - Merge indicators → market
 
     Daily:
-      - Fetch incremental market data2
+      - Fetch incremental market data
       - Fetch incremental breadth
       - Merge breadth → market
       - Calculate indicators

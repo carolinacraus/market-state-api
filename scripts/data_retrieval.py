@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from market_pipeline.config import PipelineConfig
 from market_pipeline.pipeline import DataPipeline
 from scripts.logger import get_logger
+from datetime import datetime
 
 
 def main():
