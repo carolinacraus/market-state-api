@@ -9,11 +9,56 @@ import pandas as pd
 
 from market_pipeline.config import PipelineConfig
 from market_pipeline.pipeline import DataPipeline  # your orchestrator
+from market_pipeline.errors import PipelineError, BadRequestError, UnauthorizedError
+
 from scripts.logger import get_logger
 
 app = Flask(__name__)
 logger = get_logger("flask_app_noauth")
 
+@app.before_request
+def inject_request_id():
+    g.request_id = request.headers.get("X-Request-Id") or str(uuid.uuid4())
+
+def _json_error(status: int, code: str, message: str, *, details: dict | None = None):
+    payload = {
+        "ok": False,
+        "error": {
+            "code": code,
+            "message": message,
+            "details": details or {},
+        },
+        "request_id": g.get("request_id"),
+        "path": request.path,
+        "method": request.method,
+    }
+    # Log a single concise line for Railway logs
+    logger.error(f"{code} {status} :: {message} :: req_id={payload['request_id']} details={payload['details']}")
+    return jsonify(payload), status
+
+# Known pipeline errors → clean JSON
+@app.errorhandler(PipelineError)
+def handle_pipeline_error(err: PipelineError):
+    return _json_error(err.http_status, err.code, err.message, details=err.details)
+
+# 400s from Flask / your code
+@app.errorhandler(400)
+def handle_400(e):
+    return _json_error(400, "BAD_REQUEST", "Invalid request.", details={"hint": str(e)})
+
+@app.errorhandler(401)
+def handle_401(e):
+    return _json_error(401, "UNAUTHORIZED", "Authentication required.", details={"hint": str(e)})
+
+@app.errorhandler(404)
+def handle_404(e):
+    return _json_error(404, "NOT_FOUND", "Endpoint not found.", details={"hint": request.path})
+
+# Catch-all for uncaught exceptions
+@app.errorhandler(Exception)
+def handle_uncaught(e):
+    # You can add Sentry here later if desired
+    return _json_error(500, "UNCAUGHT_EXCEPTION", "Unexpected server error.", details={"type": type(e).__name__})
 # === helpers ===
 def _cfg() -> PipelineConfig:
     cfg = PipelineConfig.from_env()
