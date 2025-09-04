@@ -10,6 +10,7 @@ from market_pipeline.merger import CsvMerger
 from market_pipeline.indicator import IndicatorCalculator
 from scripts.logger import get_logger
 from datetime import datetime
+from scripts.github_upload import upload_if_changed  # <- new
 
 
 class DataPipeline:

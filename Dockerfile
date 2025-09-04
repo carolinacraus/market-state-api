@@ -8,19 +8,31 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# (Optional) system deps only if you need them
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#     build-essential curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    gcc g++ gnupg curl unixodbc unixodbc-dev libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 
 # 1) Install Python deps first for better layer caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+# Install ODBC driver & dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    gnupg \
+    curl \
+    unixodbc \
+    unixodbc-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # 2) Copy app code
 COPY market_pipeline/ ./market_pipeline/
 COPY scripts/ ./scripts/
 COPY config/ ./config/
 COPY app.py ./
+COPY data/ ./data/
 
 # 3) Create runtime directories instead of COPYing (they may not exist in repo)
 RUN mkdir -p data logs && \

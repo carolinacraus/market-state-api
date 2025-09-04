@@ -29,7 +29,19 @@ def index():
     return "Market State API is running (no-auth mode)."
 
 # ----------------- pipeline endpoints -----------------
+@app.route("/run-daily-pipeline", methods=["POST"])
+def run_daily_pipeline():
+    try:
+        cfg = PipelineConfig.from_env()
+        cfg.ensure_dirs()
+        DataPipeline(cfg=cfg, logger=logger).run_daily()
+        return jsonify({"status": "✅ Daily pipeline complete"}), 200
+    except Exception as e:
+        logger.error(f"Daily pipeline failed: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
 
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 @app.route("/run-historical", methods=["POST"])
 def run_historical():
     """Force full historical run (no auth)."""
